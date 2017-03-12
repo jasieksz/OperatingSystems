@@ -1,13 +1,24 @@
 #include <stdio.h>
 #include <malloc.h>
-
+/*
+typedef struct Person {
+    char *first_name;
+    char *last_name;
+    char *birth_date;
+    char *email;
+    char *phone_number;
+    char *address;
+}Person;
 
 typedef struct Node {
     struct Node *parent;
     struct Node *left;
     struct Node *right;
-    int val;
+    Person *person;
 } Node;
+
+
+
 
 Node *initTree(int x);
 Node *insertElement(Node *root, Node *elem);
@@ -122,3 +133,4 @@ int main() {
     tree = removeElement(tree,e);
     printTree(tree);
 }
+ */
