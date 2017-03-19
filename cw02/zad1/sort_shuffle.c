@@ -18,25 +18,25 @@ int main(int argc, char* argv[]){
         else {
             printf("Nie ma takiej funkcji\n");
             exit(EXIT_FAILURE);
-        } 
+        }
     }
     return EXIT_SUCCESS;
 }
 
 void sorter(const char *fileName, size_t recordSize, size_t recordsNumber, void (*f)(const char*, size_t, size_t)){
     double userStartTime, userEndTime,sysStartTime, sysEndTime;
-    getTime(&ust, &sst);
+    getTime(&userStartTime, &sysStartTime);
     (*f)(fileName ,recordSize, recordsNumber);
-    getTime(&uet, &set);
-    printf("Sorting : user time: %s , system time: %s\n",userEndTime-userStartTime,sysEndTime-sysStartTime);
+    getTime(&userEndTime, &sysEndTime);
+    printf("Sorting : user time\t%fs , system time\t%fs",userEndTime-userStartTime,sysEndTime-sysStartTime);
 }
 
 void shuffler(const char* fileName, size_t recordSize,size_t recordsNumber, void (*f)(const char*, size_t, size_t)){
     double userStartTime, userEndTime,sysStartTime, sysEndTime;
-    getTime(&ust, &sst);
+    getTime(&userStartTime, &sysStartTime);
     (*f)(fileName ,recordSize, recordsNumber);
-    getTime(&uet, &set);
-    printf("Shuffling : user time: %s , system time: %s\n",userEndTime-userStartTime,sysEndTime-sysStartTime);    
+    getTime(&userEndTime, &sysEndTime);
+    printf("Shuffling : user time\t%fs , system time\t%fs",userEndTime-userStartTime,sysEndTime-sysStartTime);
 }
 
 void libSorter(const char *fileName, size_t recordSize, size_t recordsNumber){
@@ -117,7 +117,7 @@ void sysShuffler(const char* fileName,size_t recordSize, size_t recordsNumber){
         exit(EXIT_FAILURE);
     }
     for (size_t i = 0; i < recordsNumber; i++) {
-        size_t j = rand() % records;
+        size_t j = rand() % recordsNumber;
         sysSwap(file, i, j, recordSize);
     }
     close(file);
@@ -132,7 +132,7 @@ void libShuffler(const char* fileName, size_t recordSize, size_t recordsNumber){
     }
     for (size_t i = 0; i < recordsNumber; ++i) {
         size_t j = rand() % recordsNumber;
-        swap_in_file(file,i,j,recordSize);
+        libSwap(file,i,j,recordSize);
     }
     fclose(file);
 }
@@ -190,7 +190,7 @@ void sysSwap(int file, size_t i, size_t j, size_t recordSize){
         perror("Writing file failed\n");
         exit(EXIT_FAILURE);
     }
-    
+
     lseek(file, i*recordSize, SEEK_SET);
     if (write(file,second,recordSize) != recordSize){
         perror("Writing file failed\n");
@@ -209,7 +209,8 @@ void getTime(double *user, double *sys){
 }
 
 void generate(char* fileName, size_t recordSize, size_t recordsNumber){
-    FILE* writeFile,readFile;
+    FILE *writeFile;
+    FILE *readFile;
 
     if(!(writeFile = fopen(fileName, "w"))) {
         perror("Creating file failed\n");
@@ -219,7 +220,7 @@ void generate(char* fileName, size_t recordSize, size_t recordsNumber){
         exit(EXIT_FAILURE);
     }
 
-    for (size_t i = 0; i < recordsNumber, i++){
+    for (size_t i = 0; i < recordsNumber; i++){
         void *buffer = malloc(recordSize);
         if (!(fread(buffer,recordSize,1,readFile))){
             perror("Reading file failed\n");
@@ -228,6 +229,7 @@ void generate(char* fileName, size_t recordSize, size_t recordsNumber){
         fwrite(buffer,recordSize,1,writeFile);
         free(buffer);
     }
-    fclose(writeFile);
+    
     fclose(readFile);
+	fclose(writeFile);
 }
