@@ -28,7 +28,7 @@ void sorter(const char *fileName, size_t recordSize, size_t recordsNumber, void 
     getTime(&userStartTime, &sysStartTime);
     (*f)(fileName ,recordSize, recordsNumber);
     getTime(&userEndTime, &sysEndTime);
-    printf("Sorting : user time\t%fs , system time\t%fs",userEndTime-userStartTime,sysEndTime-sysStartTime);
+    printf("Sorting : user time\t%fs , system time\t%fs\n",userEndTime-userStartTime,sysEndTime-sysStartTime);
 }
 
 void shuffler(const char* fileName, size_t recordSize,size_t recordsNumber, void (*f)(const char*, size_t, size_t)){
@@ -36,7 +36,7 @@ void shuffler(const char* fileName, size_t recordSize,size_t recordsNumber, void
     getTime(&userStartTime, &sysStartTime);
     (*f)(fileName ,recordSize, recordsNumber);
     getTime(&userEndTime, &sysEndTime);
-    printf("Shuffling : user time\t%fs , system time\t%fs",userEndTime-userStartTime,sysEndTime-sysStartTime);
+    printf("Shuffling : user time\t%fs , system time\t%fs\n",userEndTime-userStartTime,sysEndTime-sysStartTime);
 }
 
 void libSorter(const char *fileName, size_t recordSize, size_t recordsNumber){
@@ -174,25 +174,25 @@ void sysSwap(int file, size_t i, size_t j, size_t recordSize){
     void* second = malloc(recordSize);
 
     lseek(file, i*recordSize, SEEK_SET);
-    if (read(file,first,recordSize) != recordSize){
+    if ((size_t)read(file,first,recordSize) != recordSize){
         perror("Reading file failed\n");
         exit(EXIT_FAILURE);
     }
 
     lseek(file, j*recordSize, SEEK_SET);
-    if (read(file,second,recordSize) != recordSize){
+    if ((size_t)read(file,second,recordSize) != recordSize){
         perror("Reading file failed\n");
         exit(EXIT_FAILURE);
     }
 
     lseek(file, j*recordSize, SEEK_SET);
-    if (write(file,first,recordSize) != recordSize){
+    if ((size_t)write(file,first,recordSize) != recordSize){
         perror("Writing file failed\n");
         exit(EXIT_FAILURE);
     }
 
     lseek(file, i*recordSize, SEEK_SET);
-    if (write(file,second,recordSize) != recordSize){
+    if ((size_t)write(file,second,recordSize) != recordSize){
         perror("Writing file failed\n");
         exit(EXIT_FAILURE);
     }
@@ -215,7 +215,7 @@ void generate(char* fileName, size_t recordSize, size_t recordsNumber){
     if(!(writeFile = fopen(fileName, "w"))) {
         perror("Creating file failed\n");
         exit(EXIT_FAILURE);
-    } else if (!(readFile = fopen("/dev/random","r"))){
+    } else if (!(readFile = fopen("/dev/urandom","r"))){
         perror("Reading file failed\n");
         exit(EXIT_FAILURE);
     }

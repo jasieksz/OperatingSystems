@@ -1,0 +1,26 @@
+=======================BEGINING==========================
+===============5000 records 4 bytes lib==================
+Sorting : user time	8.052000s , system time	17.552000s
+Shuffling : user time	0.000000s , system time	0.016000s
+===============5000 records 4 bytes sys==================
+Sorting : user time	7.048000s , system time	15.120000s
+Shuffling : user time	0.004000s , system time	0.012000s
+===============5000 records 512 bytes lib================
+Sorting : user time	9.604000s , system time	18.872000s
+Shuffling : user time	0.008000s , system time	0.012000s
+===============5000 records 512 bytes sys================
+Sorting : user time	9.720000s , system time	19.240000s
+Shuffling : user time	0.016000s , system time	0.012000s
+===============5000 records 4096 bytes lib===============
+Sorting : user time	10.968000s , system time	38.244000s
+Shuffling : user time	0.004000s , system time	0.028000s
+===============5000 records 4096 bytes sys===============
+Sorting : user time	11.608000s , system time	41.992000s
+Shuffling : user time	0.004000s , system time	0.016000s
+===============5000 records 8192 bytes lib===============
+Sorting : user time	10.748000s , system time	51.932000s
+Shuffling : user time	0.008000s , system time	0.024000s
+===============5000 records 8192 bytes sys===============
+Sorting : user time	10.388000s , system time	49.336000s
+Shuffling : user time	0.000000s , system time	0.032000s
+=========================END=============================
