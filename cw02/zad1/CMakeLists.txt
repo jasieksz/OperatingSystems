@@ -6,6 +6,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wall -pedantic -Wextra")
 set(SOURCE_FILES sort_shuffle.c)
 set(HEADER_FILES sort_shuffle.h)
 
-add_executable(program ${SOURCE_FILES_2})
+add_executable(program ${SOURCE_FILES})
 
-install(TARGETS program DESTINATION ${CMAKE_SOURCE_DIR}/bin/zad1)
+install(TARGETS program DESTINATION ${CMAKE_SOURCE_DIR}/bin)
