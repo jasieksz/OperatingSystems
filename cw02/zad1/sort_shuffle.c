@@ -48,7 +48,7 @@ void libSorter(const char *fileName, size_t recordSize, size_t recordsNumber){
     int swapped = 1;
     while (swapped != 0){
         swapped = 0;
-        for (size_t i = 1; i < recordsNumber-1; i++){ //TODO : czy na pewno recordsNumber-1
+        for (size_t i = 1; i < recordsNumber; i++){
             char* first = malloc(recordSize); //TODO : malloc record_size czy char?
             char* second = malloc(recordSize);
 
@@ -85,7 +85,7 @@ void sysSorter(const char* fileName, size_t recordSize, size_t recordsNumber){
     int swapped = 1;
     while (swapped != 0){
         swapped = 0;
-        for (size_t i = 1; i < recordsNumber-1; i++){
+        for (size_t i = 1; i < recordsNumber; i++){
             char *first = malloc(recordSize);
             char *second = malloc(recordSize);
 
@@ -229,7 +229,7 @@ void generate(char* fileName, size_t recordSize, size_t recordsNumber){
         fwrite(buffer,recordSize,1,writeFile);
         free(buffer);
     }
-    
+
     fclose(readFile);
-	fclose(writeFile);
+    fclose(writeFile);
 }
