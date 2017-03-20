@@ -7,7 +7,6 @@
 #include <sys/resource.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <zconf.h>
 #include <fcntl.h>
 
 void getTime(double *user, double *sys);
