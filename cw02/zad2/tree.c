@@ -21,12 +21,6 @@ int printDirectory(char *currentPath) {
     return result;
   
 }
-/* 20 -> max number of dir nftw can open at the same time
- * fpath - the pathname of the entry
- * sb is a pointer to the stat structure returned by a call to stat to fpath
- * tflag one of following values: FTW_F (fpath is a regular FILE), FTW_D (fpath is a directory), FTW_DNR(file is a directory which can't be read)
- * ftwbuf -> struct with int base, int level. Base: offset of the file, level: depth in the directory tree
-*/
 
 int conditionChecker(const char *fpath, const struct stat *file, int tflag, struct FTW *ftwbuf) {
     if(tflag == FTW_F && file->st_size < size){
@@ -66,14 +60,11 @@ char *getPermissions(struct stat file) {
 }
 
 /*
-opendir readdir stat
-struct timespec st_mtim;
-FTW_PHYS --> do not follow symoblic links
-*/
-/*
-plik.size <= size
-ścieżka bezwzględna pliku
-rozmiar w bajtach
-prawa dostępu do pliku (w formacie używanym przez ls -l, np. r--r--rw- )
-datę ostatniej modyfikacji
+ struct timespec st_mtim;
+ FTW_PHYS --> do not follow symoblic links
+ 20 -> max number of dir nftw can open at the same time
+ fpath - the pathname of the entry
+ sb is a pointer to the stat structure returned by a call to stat to fpath
+ tflag one of following values: FTW_F (fpath is a regular FILE), FTW_D (fpath is a directory), FTW_DNR(file is a directory which can't be read)
+ ftwbuf -> struct with int base, int level. Base: offset of the file, level: depth in the directory tree
 */

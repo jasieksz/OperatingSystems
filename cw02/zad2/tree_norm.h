@@ -1,5 +1,5 @@
-#ifndef CW02_TREE_H
-#define CW02_TREE_H
+#ifndef CW02_TREE_NORM_H
+#define CW02_TREE_NORM_H
 #define _XOPEN_SOURCE 500 
 
 #include <unistd.h>
@@ -11,11 +11,9 @@
 #include <time.h>
 #include <limits.h>
 
-int printDirectory(char *currentPath);
-int conditionChecker(const char *fpath, const struct stat *file, int tflag, struct FTW *ftwbuf);
+//void printDirectory(char *filePath, int size);
+void list_directory(char *path, int size);
 void printFileInfo(const struct stat *file, const char *newPath);
 char *getPermissions(struct stat file);
-
-
 
 #endif
