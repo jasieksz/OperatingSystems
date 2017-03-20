@@ -11,22 +11,39 @@ int main(int argc, char *argv[]){
         char root[PATH_MAX + 1];
         size = atoi(argv[2]);
         realpath(argv[1], root);
-        nftwCrawler(root);
+        printDirectory(root);
     }
 }
 
-void nftwCrawler(char *currentPath) {
-    int result = nftw(currentPath, conditionChecker,20, FTW_PHYS);
+void printDirectory(char *currentPath) {
+    int result = nftw(currentPath, conditionChecker,20, (FTW_PHYS | FTW_F);
+    
 }
+/* 20 -> max number of dir nftw can open at the same time
+ * fpath - the pathname of the entry
+ * sb is a pointer to the stat structure returned by a call to stat to fpath
+ * tflag one of following values: FTW_F (fpath is a regular FILE), FTW_D (fpath is a directory), FTW_DNR(file is a directory which can't be read)
+ * ftwbuf -> struct with int base, int level. Base: offset of the file, level: depth in the directory tree
+*/
 
 int conditionChecker(const char *fpath, const struct stat *file, int tflag, struct FTW *ftwbuf) {
-    if(tflag == FTW_F && file->st_size < size){
-        printFileInfo(file, fpath);
+
+    if(file->st_size < size){
+        char *permisions;
+        permisions = getPermissions((*file));
+
+        strftime(time, 20, "%Y-%m-%d %H:%M:%S", localtime(&file->st_mtime));
+        printf("File name %s\n", fpath);
+        printf("Size in bytes: %d\n", (int)(file->st_size));
+        printf("Rights : %s\n",permisions);
+        printf("Last modified %s\n", time);
+        printf("----------\n");
+        //printFileInfo(file, fpath);
     }
     return 0;
 }
 
-
+/*
 void printFileInfo(const struct stat *file, const char *newPath) {
     char date[10];
     char *permisions;
@@ -40,7 +57,7 @@ void printFileInfo(const struct stat *file, const char *newPath) {
     printf("Date : %s\n",date);
     free(permisions);
 }
-
+*/
 char *getPermissions(struct stat file) {
     char *permisions = calloc(10, sizeof(char));
     permisions[0] = (char) ((file.st_mode & 0040000) ? 'd' : '-');
