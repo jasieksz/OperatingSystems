@@ -19,7 +19,7 @@ return 0;
 int printDirectory(char *currentPath) {
     int result = nftw(currentPath, conditionChecker,20, FTW_PHYS);
     return result;
-  
+
 }
 
 int conditionChecker(const char *fpath, const struct stat *file, int tflag, struct FTW *ftwbuf) {
@@ -31,16 +31,16 @@ int conditionChecker(const char *fpath, const struct stat *file, int tflag, stru
 
 
 void printFileInfo(const struct stat *file, const char *newPath) {
-    char date[10];
+    char timeBuffer[20];
     char *permisions;
-
-    strftime(date, 10, "%d-%m-%y", localtime(&((*file).st_mtime)));
+    //strftime(timeBuffer, sizeof(timeBuffer), "%d.%m.%Y %H:%M:%S", localtime(&file.st_mtime));
+    strftime(timeBuffer, 20, "%d.%m.%Y %H:%M:%S", localtime(&((*file).st_mtime)));
     permisions = getPermissions((*file));
 
     printf("\nPath : %s\n",newPath);
     printf("Size : %i\n",(int)(*file).st_size);
     printf("Rights : %s\n",permisions);
-    printf("Date modified : %s\n",date);
+    printf("Date modified : %s\n",timeBuffer);
     free(permisions);
 }
 

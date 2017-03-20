@@ -1,6 +1,6 @@
 #ifndef CW02_TREE_H
 #define CW02_TREE_H
-#define _XOPEN_SOURCE 500 
+#define _XOPEN_SOURCE 500
 
 #include <unistd.h>
 #include <string.h>

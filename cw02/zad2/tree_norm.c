@@ -7,100 +7,49 @@ int main(int argc, char *argv[]){
     }
 
     char root[PATH_MAX + 1];
-    size = atoi(argv[2]);
+    int size = atoi(argv[2]);
     realpath(argv[1], root);
-    list_directory(root, size);
+    printDirectory(root, size);
     return 0;
 }
-/*
-void printDirectory(char *filePath, int size){
-    DIR *directory;
-    struct dirent *dir;
-    struct stat file;
 
-    directory = opendir(filePath);
-    if (directory == NULL){ 
+void printDirectory(char *filePath, int size) {
+    struct dirent *dirent;
+    char *newPath;
+    struct stat file;
+    DIR *pDir;
+    char timeBuffer[20];
+
+    pDir = opendir(filePath);
+    if (pDir == NULL) {
         printf("Opening directory failed\n");
         exit(EXIT_FAILURE);
-    };
-
-    while ((dir = readdir(directory)) != NULL) {
-        char *tmpPath = malloc((strlen(filePath) + strlen(dir->d_name) + 2) * sizeof(char));
-        strcpy(tmpPath, filePath);
-        if (filePath[strlen(filePath) - 1] != '/') strcat(tmpPath, "/");
-        strcat(tmpPath, dir->d_name);
-	    if (dir->d_type == DT_DIR && strcmp(dir->d_name, "..") != 0 && strcmp(dir->d_name, ".") != 0) {
-            search(tmpPath, size);
-        } else  {
-            int result = lstat(tmpPath, &file);
-            if (result < 0) error();
-            if (S_ISDIR(file.st_mode) && strcmp(dir->d_name, "..") != 0 && strcmp(dir->d_name, ".") != 0) {
-                search(tmpPath, size);
-            } else if (S_ISREG(file.st_mode) && file.st_size <= size) {
-                print_info(&file, tmpPath);
-            }
-        }
-        free(tmpPath);
-    }
-}
-*/
-void list_directory(char *path, int size) {
-    struct dirent *dirent;
-    char *file_path;
-    struct stat file_stat;
-    int stat_result;
-    DIR *pDir;
-    char time_buffer[20];
-
-    pDir = opendir(path);
-    if (pDir == NULL) {
-        printf("Error while opening the directory\n");
-        exit(1);
     }
 
     while ((dirent = readdir(pDir)) != NULL) {
         if (strcmp(dirent->d_name, ".") != 0 && strcmp(dirent->d_name, "..") != 0) {
-            /* allocates memory for concatened path string and dirent name.
-             2 additional bytes for 2*(\n) */
-           file_path = malloc(strlen(path) + strlen(dirent->d_name) + 2);
-            /* writes path, dirent->d_name to file_path string */
-            sprintf(file_path, "%s/%s", path, dirent->d_name);
-            /* retrievs stats about file_path and saves to file_stat */
-            stat_result = stat(file_path, &file_stat);
-            if (stat_result < 0) {
-                printf("Error while retrieving stats\n");
-                exit(1);
+           newPath = malloc(strlen(filePath) + strlen(dirent->d_name) + 2);
+            sprintf(newPath, "%s/%s", filePath, dirent->d_name);
+            if (stat(newPath, &file) < 0) {
+                printf("Geting stats failed\n");
+                exit(EXIT_FAILURE);
             }
-            if(S_ISREG(file_stat.st_mode) && file_stat.st_size < size) {
-                strftime(time_buffer, sizeof(time_buffer), "%d.%m.%Y %H:%M:%S", localtime(&file_stat.st_atime));
-                printf("File name: %s\n", file_path);
-                printf("File size in bytes: %d\n", (int)file_stat.st_size);
-                printf("Last access %s\n", time_buffer);
-                printf("----------------------\n");
+            if(S_ISREG(file.st_mode) && file.st_size < size) {
+                strftime(timeBuffer, sizeof(timeBuffer), "%d.%m.%Y %H:%M:%S", localtime(&file.st_mtime));
+                char *permisions = getPermissions(file);
+                printf("\nPath: %s\n", newPath);
+                printf("Size: %d\n", (int)file.st_size);
+                printf("Rights : %s\n",permisions);
+                printf("Last modified %s\n", timeBuffer);
+                free(permisions);
             }
-            if(S_ISDIR(file_stat.st_mode)) {
-                /* recursively execute this function for
-                 every directory found in tree */
-                list_directory(file_path, size);
+            if(S_ISDIR(file.st_mode)) {
+                printDirectory(newPath, size);
             }
-            free(file_path);
+            free(newPath);
         }
     }
     closedir(pDir);
-}
-
-void printFileInfo(const struct stat *file, const char *newPath) {
-    char date[10];
-    char *permisions;
-
-    strftime(date, 10, "%d-%m-%y", localtime(&((*file).st_mtime)));
-    permisions = getPermissions((*file));
-
-    printf("\nPath : %s\n",newPath);
-    printf("Size : %i\n",(int)(*file).st_size);
-    printf("Rights : %s\n",permisions);
-    printf("Date modified : %s\n",date);
-    free(permisions);
 }
 
 char *getPermissions(struct stat file) {
