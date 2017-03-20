@@ -8,4 +8,4 @@ set(HEADER_FILES sort_shuffle.h)
 
 add_executable(program ${SOURCE_FILES})
 
-install(TARGETS program DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS program DESTINATION ${CMAKE_SOURCE_DIR}/bin/zad1)
