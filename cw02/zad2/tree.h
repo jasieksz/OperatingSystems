@@ -12,7 +12,7 @@
 #include <time.h>
 #include <limits.h>
 
-void nftwCrawler(char *currentPath);
+int printDirectory(char *currentPath);
 int conditionChecker(const char *fpath, const struct stat *file, int tflag, struct FTW *ftwbuf);
 void printFileInfo(const struct stat *file, const char *newPath);
 char *getPermissions(struct stat file);
