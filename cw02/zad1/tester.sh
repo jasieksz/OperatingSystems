@@ -1,5 +1,5 @@
 #!/bin/bash
-cd bin/zad1
+cd /home/student/Desktop/OperatingSystems/cw02/bin/zad1
 echo "=======================BEGINING==========================" > out.txt
 ./program lib generate data1 5000 4
 cp data1 data2

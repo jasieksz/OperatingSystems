@@ -8,4 +8,4 @@ set(HEADER_FILES tree.h)
 
 add_executable(dirprogram ${SOURCE_FILES})
 
-install(TARGETS dirprogram DESTINATION ${CMAKE_SOURCE_DIR}/bin/zad2)
+install(TARGETS dirprogram DESTINATION ./zad2)

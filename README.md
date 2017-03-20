@@ -1,1 +1,1 @@
-# Assingments for Operating Systems class
+# Assingments for Operating Systems class - summer 2017

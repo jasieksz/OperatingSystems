@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <ftw.h>
-#include <fftw3.h>
+//#include <fftw3.h>
 #include <time.h>
 #include <limits.h>
 
