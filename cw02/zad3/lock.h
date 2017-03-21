@@ -15,11 +15,11 @@
 void setReadLock (int openDesc,int offset);
 void setWriteLock (int openDesc,int offset);
 void removeLock(int openDesc,int offset);
-void printLocks(int openDesc,int offset);
+void printLocks(int openDesc);
 void readChar(int openDesc,int offset);
 void writeChar(int openDesc,int offset);
 int executeLock(int openDesc, int f, int type, int offset);
 void checkError(int result);
-int get_option();
+int getOption();
 
 #endif
