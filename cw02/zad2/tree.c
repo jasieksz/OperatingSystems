@@ -33,7 +33,6 @@ int conditionChecker(const char *fpath, const struct stat *file, int tflag, stru
 void printFileInfo(const struct stat *file, const char *newPath) {
     char timeBuffer[20];
     char *permisions;
-    //strftime(timeBuffer, sizeof(timeBuffer), "%d.%m.%Y %H:%M:%S", localtime(&file.st_mtime));
     strftime(timeBuffer, 20, "%d.%m.%Y %H:%M:%S", localtime(&((*file).st_mtime)));
     permisions = getPermissions((*file));
 
