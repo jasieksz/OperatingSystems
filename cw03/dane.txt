@@ -1,0 +1,2 @@
+#zmiena srodowiskowa wiecej arg
+#usunzmienna
