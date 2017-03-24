@@ -14,6 +14,6 @@
   void parse(FILE *filePointer);
   void executeProg(char *line, int size);
   void enviromentVariable(char *line, int size);
-  char *splitString(char *line, int *counter);
+  char **splitString(char *line, int *counter);
 
 #endif

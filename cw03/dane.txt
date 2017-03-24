@@ -1,2 +1,2 @@
-#zmiena srodowiskowa wiecej arg
-#usunzmienna
+#zmienna jasiek
+#zmienna

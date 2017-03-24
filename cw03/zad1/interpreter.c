@@ -40,20 +40,21 @@ void enviromentVariable(char *line, int size){
     line++;
     int counter = 0;
 
-    char *args = splitString(line,&counter);
-
+    char **args = splitString(line,&counter);
+    char *name = args[0];
+    char *value = args[1];
     if (counter == 1){
       if ((unsetenv(args[0])) != 0){
         perror("Removing env var failed");
         exit(EXIT_FAILURE);
-      }
+      } else printf("%s\n","Removing env var succesful");
     } else if (counter == 2) {
       char *name = args[0];
       char *value = args[1];
       if ((setenv(name,value,1)) != 0){
         perror("Adding env var failed");
         exit(EXIT_FAILURE);
-      }
+      } else printf("%s\n","Adding env var succesful");
     } else {
       perror("Too many arguments");
       exit(EXIT_FAILURE);
@@ -65,13 +66,14 @@ void executeProg(char *line, int size){
   //int execve(const char *filename, char *const argv[],char *const envp[]);
 }
 
-char *splitString(char *line, int *counter){
-  char *args = calloc(5, sizeof(char));
+char **splitString(char *line, int *counter){
+  char *args[5];// = calloc(5*20, sizeof(char));
   char *token;
   int i = 0;
   token = strtok(line," ");
   while (token && i < 5){
-    args[i] = token;
+    args[i] = malloc(strlen(token)+1*sizeof(char));
+    strcpy(args[i],token);
     i++;
     token = strtok(NULL," ");
   }
