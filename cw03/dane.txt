@@ -1,2 +1,4 @@
-#zmienna jasiek
-#zmienna
+cd ..
+cd ..
+ls -al
+pwd

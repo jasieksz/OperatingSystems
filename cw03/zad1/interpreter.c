@@ -25,7 +25,7 @@ void parse(FILE *filePointer){ //na koncu lini jest \n, puste linie czyta jako e
   char *line = NULL;
   size_t len = 0;
   ssize_t read;
-  while ((read = getline(&line, &len, filePointer)) != -1){
+  while ((read = getline(&line, &len, filePointer)) != -1){ //-1 <=> EOF
     int size = (int) read-1;
     if (line[0] == '#')
       enviromentVariable(line,size);
@@ -36,25 +36,22 @@ void parse(FILE *filePointer){ //na koncu lini jest \n, puste linie czyta jako e
 }
 
 void enviromentVariable(char *line, int size){
-    line[size] = 0;
+    if (line[size] == '\n')
+      line[size] = 0; // usun # i \n z line
     line++;
     int counter = 0;
 
     char **args = splitString(line,&counter);
-    char *name = args[0];
-    char *value = args[1];
     if (counter == 1){
       if ((unsetenv(args[0])) != 0){
         perror("Removing env var failed");
         exit(EXIT_FAILURE);
-      } else printf("%s\n","Removing env var succesful");
+      } else printf("Removing %s succesful\n",args[0]);
     } else if (counter == 2) {
-      char *name = args[0];
-      char *value = args[1];
-      if ((setenv(name,value,1)) != 0){
+      if ((setenv(args[0],args[1],1)) != 0){
         perror("Adding env var failed");
         exit(EXIT_FAILURE);
-      } else printf("%s\n","Adding env var succesful");
+      } else printf("Adding %s succesful\n",args[0]);
     } else {
       perror("Too many arguments");
       exit(EXIT_FAILURE);
@@ -62,17 +59,41 @@ void enviromentVariable(char *line, int size){
 }
 
 void executeProg(char *line, int size){
-  //fork exec wait
-  //int execve(const char *filename, char *const argv[],char *const envp[]);
+  if (line[size] == '\n')
+    line[size] = 0; // usun \n z line
+  int counter = 0;
+  char **args = splitString(line,&counter);
+  char *program = args[0];
+  args++;
+  int status;
+  pid_t pid = fork();
+  if (pid == 0){
+    if (execv(program,args) == -1 && execvp(program,args) == -1){
+      perror("Runing program failed");
+      exit(EXIT_FAILURE);
+    }
+  } else if (pid > 0){
+    wait(&status);
+    if(WIFEXITED(status))
+      printf("Child %d with program %s exited normally with code %d\n",pid,program,WEXITSTATUS(status));
+    else
+      printf("Child %d with program %s didn't exit normally\n",pid,program);
+  } else{
+    perror("Creating process failed");
+    exit(EXIT_FAILURE);
+  }
 }
 
+
+
+// maksymalnie 5 argumentow
 char **splitString(char *line, int *counter){
-  char *args[5];// = calloc(5*20, sizeof(char));
+  char **args = malloc(5*sizeof(char));
   char *token;
   int i = 0;
   token = strtok(line," ");
   while (token && i < 5){
-    args[i] = malloc(strlen(token)+1*sizeof(char));
+    args[i] = malloc((strlen(token)+1)*sizeof(char));
     strcpy(args[i],token);
     i++;
     token = strtok(NULL," ");
