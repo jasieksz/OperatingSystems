@@ -33,6 +33,7 @@ void parse(FILE *filePointer){ //na koncu lini jest \n, puste linie czyta jako e
       executeProg(line,size);
   }
   free(line);
+  fclose(filePointer);
 }
 
 void enviromentVariable(char *line, int size){
@@ -64,10 +65,10 @@ void executeProg(char *line, int size){
   int counter = 0;
   char **args = splitString(line,&counter);
   char *program = args[0];
-  args++;
+  //args++;
   int status;
   pid_t pid = fork();
-  if (pid == 0){
+  if (pid == 0){ //TODO : przekazywanie arguemtow nie dziala :/
     if (execv(program,args) == -1 && execvp(program,args) == -1){
       perror("Runing program failed");
       exit(EXIT_FAILURE);
