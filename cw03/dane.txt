@@ -1,4 +1,6 @@
-cd ..
-cd ..
-ls -al
-pwd
+echo 123
+sleep 1
+#liczba 27
+bin/zad1/test liczba
+#liczba
+bin/zad1/test liczba

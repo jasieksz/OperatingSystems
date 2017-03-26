@@ -17,6 +17,7 @@ int main(int argc, char *argv[]){
   }
 
   parse(filePointer);
+  fclose(filePointer);
 
   return 0;
 }
@@ -33,7 +34,6 @@ void parse(FILE *filePointer){ //na koncu lini jest \n, puste linie czyta jako e
       executeProg(line,size);
   }
   free(line);
-  fclose(filePointer);
 }
 
 void enviromentVariable(char *line, int size){
@@ -65,9 +65,10 @@ void executeProg(char *line, int size){
   int counter = 0;
   char **args = splitString(line,&counter);
   char *program = args[0];
-  //args++;
+
   int status;
   pid_t pid = fork();
+
   if (pid == 0){ //TODO : przekazywanie arguemtow nie dziala :/
     if (execv(program,args) == -1 && execvp(program,args) == -1){
       perror("Runing program failed");
@@ -75,10 +76,16 @@ void executeProg(char *line, int size){
     }
   } else if (pid > 0){
     wait(&status);
-    if(WIFEXITED(status))
-      printf("Child %d with program %s exited normally with code %d\n",pid,program,WEXITSTATUS(status));
-    else
-      printf("Child %d with program %s didn't exit normally\n",pid,program);
+    if(WIFEXITED(status) && !WEXITSTATUS(status))
+      printf("SUCCESFUL ==> PID: %d PROGRAM: %s EXITCODE: %d\n",pid,program,WEXITSTATUS(status));
+    else{
+      printf("FAILED ==> PID: %d PROGRAM: %s\n",pid,program);
+      /*
+      if (WIFSIGNALED(status))
+        printf("If signaled ==> Exit signal %s\n",WTERMSIG(status));
+        */
+      exit(EXIT_FAILURE);
+    }
   } else{
     perror("Creating process failed");
     exit(EXIT_FAILURE);
@@ -92,13 +99,14 @@ char **splitString(char *line, int *counter){
   char **args = malloc(5*sizeof(char));
   char *token;
   int i = 0;
-  token = strtok(line," ");
+  token = strtok(line," \n");
   while (token && i < 5){
     args[i] = malloc((strlen(token)+1)*sizeof(char));
     strcpy(args[i],token);
     i++;
-    token = strtok(NULL," ");
+    token = strtok(NULL," \n");
   }
+  args[i] = NULL;
   *counter = i;
   return args;
 }
