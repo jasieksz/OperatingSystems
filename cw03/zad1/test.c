@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
   if (env == NULL){
     printf("%s\n","Variable doesnt exist");
   } else {
-    printf("Zmienna %s, wartosc %s\n",argv[1],env);
+    printf("\tZmienna %s, wartosc %s\n",argv[1],env);
   }
   return 0;
 }

@@ -89,7 +89,7 @@ void executeProg(char *line, int size){
       perror("MEM limit failed");
       exit(EXIT_FAILURE);
     }
-    if (execvp(program,args) == -1){
+    if (execv(program,args) == -1 && execvp(program,args) == -1){
       perror("Runing program failed");
       exit(EXIT_FAILURE);
     }
@@ -113,8 +113,6 @@ void executeProg(char *line, int size){
 float getTime(struct timeval t){
   return (float)(((float)t.tv_usec)/1000000 + t.tv_sec);
 }
-
-
 
 // maksymalnie 5 argumentow
 char **splitString(char *line, int *counter){

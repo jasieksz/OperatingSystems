@@ -5,17 +5,8 @@
 
 
 int main(int argc, char *argv[]){
-  //test zmienna
-  if (argc != 2){
-    perror("Wrong arguments");
-    exit(EXIT_FAILURE);
-  }
-
-  const char *env = getenv(argv[1]);
-  if (env == NULL){
-    printf("%s\n","Variable doesnt exist");
-  } else {
-    printf("Zmienna %s, wartosc %s\n",argv[1],env);
+  while(1){
+    char *test = calloc(10,sizeof(char));
   }
   return 0;
 }
