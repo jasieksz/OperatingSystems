@@ -1,21 +1,26 @@
 #include "interpreter_limit.h"
 
+rlim_t cpuLimit;
+rlim_t memLimit;
+
 int main(int argc, char *argv[]){
 
-  if (argc != 2){
+  if (argc != 4){
     printf("Bledna ilosc argumentow\n");
     exit(EXIT_FAILURE);
   }
 
   char *fileName;
   fileName = argv[1];
-  FILE *filePointer;
 
+  cpuLimit = (rlim_t) atoll(argv[2]);
+  memLimit = ((rlim_t) atoll(argv[3]))*1024*1024;
+
+  FILE *filePointer;
   if(!(filePointer = fopen(fileName,"r"))){
       perror("Opening file failed\n");
       exit(EXIT_FAILURE);
   }
-
   parse(filePointer);
   fclose(filePointer);
 
@@ -69,27 +74,44 @@ void executeProg(char *line, int size){
   int status;
   pid_t pid = fork();
 
-  if (pid == 0){ //TODO : przekazywanie arguemtow nie dziala :/
-    if (execv(program,args) == -1 && execvp(program,args) == -1){
+  if (pid == 0){
+    struct rlimit rlimCpu;
+    rlimCpu.rlim_cur = 1;
+    rlimCpu.rlim_max = cpuLimit;
+    if(setrlimit(RLIMIT_CPU, &rlimCpu) == -1) {
+      perror("CPU limit failed");
+      exit(EXIT_FAILURE);
+    }
+    struct rlimit rlimMem;
+    rlimMem.rlim_cur = memLimit/2;
+    rlimMem.rlim_max = memLimit;
+    if(setrlimit(RLIMIT_AS, &rlimMem) == -1) {
+      perror("MEM limit failed");
+      exit(EXIT_FAILURE);
+    }
+    if (execvp(program,args) == -1){
       perror("Runing program failed");
       exit(EXIT_FAILURE);
     }
   } else if (pid > 0){
-    wait(&status);
-    if(WIFEXITED(status) && !WEXITSTATUS(status))
+    struct rusage usage;
+    wait4(pid,&status,0,&usage);
+    if(WIFEXITED(status) && !WEXITSTATUS(status)){
       printf("SUCCESFUL ==> PID: %d PROGRAM: %s EXITCODE: %d\n",pid,program,WEXITSTATUS(status));
-    else{
+      printf("USAGE ==> SYS : %f | USER : %f \n",getTime(usage.ru_stime),getTime(usage.ru_utime));
+    } else{
       printf("FAILED ==> PID: %d PROGRAM: %s\n",pid,program);
-      /*
-      if (WIFSIGNALED(status))
-        printf("If signaled ==> Exit signal %s\n",WTERMSIG(status));
-        */
+      printf("USAGE ==> SYS : %f | USER : %f \n",getTime(usage.ru_stime),getTime(usage.ru_utime));
       exit(EXIT_FAILURE);
     }
   } else{
     perror("Creating process failed");
     exit(EXIT_FAILURE);
   }
+}
+
+float getTime(struct timeval t){
+  return (float)(((float)t.tv_usec)/1000000 + t.tv_sec);
 }
 
 

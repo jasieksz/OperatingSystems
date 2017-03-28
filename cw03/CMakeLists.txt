@@ -6,3 +6,4 @@ set(CMAKE_C_STANDARD C11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_subdirectory(zad1)
+add_subdirectory(zad2)

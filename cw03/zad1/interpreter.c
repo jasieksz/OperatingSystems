@@ -75,15 +75,19 @@ void executeProg(char *line, int size){
       exit(EXIT_FAILURE);
     }
   } else if (pid > 0){
-    wait(&status);
-    if(WIFEXITED(status) && !WEXITSTATUS(status))
+    waitpid(pid,&status,WUNTRACED | WCONTINUED);
+    if(WIFEXITED(status) && !WEXITSTATUS(status)){
+      if (WIFSIGNALED(status)){
+        printf("KILLED ==> Exit signal %s\n",WTERMSIG(status));
+        exit(EXIT_FAILURE);
+      } else if(WIFSTOPPED(status)){
+        printf("STOPPED ==> Exit signal %s\n",WSTOPSIG(status));
+        exit(EXIT_FAILURE);
+      } else
       printf("SUCCESFUL ==> PID: %d PROGRAM: %s EXITCODE: %d\n",pid,program,WEXITSTATUS(status));
+    }
     else{
       printf("FAILED ==> PID: %d PROGRAM: %s\n",pid,program);
-      /*
-      if (WIFSIGNALED(status))
-        printf("If signaled ==> Exit signal %s\n",WTERMSIG(status));
-        */
       exit(EXIT_FAILURE);
     }
   } else{
@@ -96,7 +100,7 @@ void executeProg(char *line, int size){
 
 // maksymalnie 5 argumentow
 char **splitString(char *line, int *counter){
-  char **args = malloc(5*sizeof(char));
+  char **args = malloc(6*sizeof(char));
   char *token;
   int i = 0;
   token = strtok(line," \n");

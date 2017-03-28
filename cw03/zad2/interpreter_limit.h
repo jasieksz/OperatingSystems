@@ -10,10 +10,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
   void parse(FILE *filePointer);
   void executeProg(char *line, int size);
   void enviromentVariable(char *line, int size);
   char **splitString(char *line, int *counter);
+  float getTime();
 
 #endif

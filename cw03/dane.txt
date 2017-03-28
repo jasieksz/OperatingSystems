@@ -1,5 +1,5 @@
 echo 123
-sleep 1
+sleep 3
 #liczba 27
 bin/zad1/test liczba
 #liczba
