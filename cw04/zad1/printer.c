@@ -10,7 +10,7 @@
 int interval = 1;
 
 void sigintHandler(int sig);
-void sigstpHandler(int sig);
+void sigtstpHandler(int sig);
 void infLoop();
 
 int main(void) {
@@ -29,7 +29,6 @@ int main(void) {
     }
 
     infLoop();
-
     return 0;
 }
 
@@ -40,6 +39,8 @@ void infLoop(){
             printf("%c\n", 'a' + counter);
             sleep(1);
             counter += interval;
+            if (counter == -1)
+              counter = 25;
         }
     }
 }
