@@ -1,0 +1,1 @@
+prog arg2 arg3 | prog arg2 | pwd 6845 awe
