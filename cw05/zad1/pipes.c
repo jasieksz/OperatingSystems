@@ -43,15 +43,19 @@ void parse(FILE *filePointer){
     int i = 0;
     while (i < counter){
       int j = 0;
+      if (strcmp(args[i],"\n") == 0)
+        printf("TSESTSTST\n");
       while (i < counter && strcmp(args[i],"|") != 0){
         progArgs[j] = args[i];
         i++; j++;
       }
+      for (int c=0;c<j;c++)
+        printf("%s ",progArgs[c]);
+      printf("\n");
       progArgs[j] = NULL;
       i++;
-      printf("\nEXECUTE\n");
+      printf("EXECUTE\n\n"); //TODO execute this program
     }
-
   }
 }
 
@@ -59,7 +63,7 @@ char **splitString(char *line, int *counter){
   char **args = malloc(60*sizeof(char));
   char *token;
   int i = 0;
-  token = strtok(line," ");
+  token = strtok(line," \n");
   while (token && i < 60){
     args[i] = malloc((strlen(token)+1)*sizeof(char));
     strcpy(args[i],token);
