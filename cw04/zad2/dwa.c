@@ -42,8 +42,9 @@ int main(int argc, char *argv[]){
       exit(EXIT_FAILURE);
     }
   }
-  if (pid == 0)
+  if (pid == 0){
     execle("./child",NULL);
+  }
   else
 	  parentAction();
   return 0;
