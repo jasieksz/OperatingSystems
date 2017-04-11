@@ -34,18 +34,18 @@ int main(int argc, char *argv[]){
   int pid = 1;
 
   for (int i = 0; i < n; i++){
-    if (pid != 0){
+    if (pid > 0){
       pid = fork();
       children[i] = pid;
+    } else if (pid < 0){
+      perror("Fork failed");
+      exit(EXIT_FAILURE);
     }
   }
-  if (pid == 0){
+  if (pid == 0)
     execle("./child",NULL);
-  }
-  else{
+  else
 	  parentAction();
-  }
-
   return 0;
 }
 
@@ -62,7 +62,7 @@ void parentAction(){
     sigaction(i, &saction, NULL);
 
   while (wait(NULL))
-    if (errno == ECHILD)
+    if (errno == ECHILD) //calling process doesnt hace any unwaited for children
       break;
 }
 
@@ -100,105 +100,3 @@ void parentHandler(int sig, siginfo_t *info, void *context){
     printf("CAUGHT SIGNAL (SIGRT): %d\n",sig);
   }
 }
-
-/*
-void createProc(){
-  pid_t *children = malloc(sizeof(pid_t)*n);
-  pid_t *procQ = malloc(sizeof(pid_t)*n);
-  int pid = 1;
-
-  printf("%s\n","TEST 111111");
-  for (int i = 0; i < n; i++){
-    if (pid > 0){
-      pid = fork();
-      children[i] = pid;
-      printf("NEW CHILD : %d\n",pid);
-    } else if (pid < 0){
-      perror("Fork failed");
-      exit(EXIT_FAILURE);
-    }
-  }
-  printf("%s PID : %d\n","TEST 2222",pid);
-  if (pid == 0){
-    parentAction();
-  } else
-	 childAction2();
-}
-
-void childAction(){
-
-  time_t startTime,endTime;
-  printf("CHILD PID: %d\n",getpid());
-  //srand((unsigned int) getpid());
-  sleep(3);
-  //sleep((unsigned int) rand()%10);
-
-  printf("SENDING SIGUSR FROM: %d\n",getpid());
-  kill(getppid(), SIGUSR1);
-
-  signal(SIGUSR1, childHandler);
-  signal(SIGINT, childHandler);
-
-  time(&startTime);
-  pause();
-  time(&endTime);
-
-  printf("UNPAUSED PID: %d\n",getpid());
-  int diffTime = (int) difftime(endTime,startTime);
-  printf("TIME DIFF: %d\n",diffTime);
-  exit(diffTime);
-}
-
-void childAction2(){
-
-  struct sigaction saction;
-  memset(&saction, '\0', sizeof(saction));
-  saction.sa_sigaction = &childHandler;
-  saction.sa_flags = SA_SIGINFO;
-  sigemptyset(&saction.sa_mask);
-
-  time_t startTime,endTime;
-  printf("CHILD PID: %d\n",getpid());
-  //srand((unsigned int) getpid());
-  sleep(3);
-  //sleep((unsigned int) rand()%10);
-
-  printf("SENDING SIGUSR FROM: %d\n",getpid());
-  kill(getppid(), SIGUSR1);
-
-  //signal(SIGUSR1, childHandler);
-  //signal(SIGINT, childHandler);
-  sigaction(SIGUSR1,&saction,NULL);
-  sigaction(SIGINT,&saction,NULL);
-
-  time(&startTime);
-  pause();
-  time(&endTime);
-
-  printf("UNPAUSED PID: %d\n",getpid());
-  int diffTime = (int) difftime(endTime,startTime);
-  printf("TIME DIFF: %d\n",diffTime);
-  exit(diffTime);
-}
-
-void childHandler(int sig, siginfo_t *info, void *context){
-  if (sig == SIGUSR1){
-    //kill(getppid(),SIGTSTP);
-    kill(getppid(), SIGRTMIN + (rand() % (SIGRTMAX - SIGRTMIN + 1)));
-  } else if (sig == SIGINT) {
-    exit(1);
-  }
-}
-
-
-void parentHandler2(int sig, siginfo_t *info, void *context){
-  if (sig == SIGUSR1){
-    printf("CAUGHT SIGUSR1 FROM: %d\n",info->si_pid);
-  } else if (sig == SIGINT){
-    printf("CAUGHT SIGINT FROM: %d\n",info->si_pid);
-  } else {
-    printf("%s\n","COS INNEGO AABASJFAKSF");
-  }
-}
-
-*/
