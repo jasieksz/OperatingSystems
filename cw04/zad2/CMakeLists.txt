@@ -10,4 +10,3 @@ add_executable(child child.c)
 
 install(TARGETS program2 DESTINATION ${CMAKE_SOURCE_DIR}/bin/zad2)
 install(TARGETS child DESTINATION ${CMAKE_SOURCE_DIR}/bin/zad2)
-s
