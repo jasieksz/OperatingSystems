@@ -43,8 +43,6 @@ void parse(FILE *filePointer){
     int i = 0;
     while (i < counter){
       int j = 0;
-      if (strcmp(args[i],"\n") == 0)
-        printf("TSESTSTST\n");
       while (i < counter && strcmp(args[i],"|") != 0){
         progArgs[j] = args[i];
         i++; j++;
@@ -60,11 +58,11 @@ void parse(FILE *filePointer){
 }
 
 char **splitString(char *line, int *counter){
-  char **args = malloc(60*sizeof(char));
+  char **args = malloc(80*sizeof(char *)); //20 pipeow po 3 argumenty
   char *token;
   int i = 0;
   token = strtok(line," \n");
-  while (token && i < 60){
+  while (token && i < 80){
     args[i] = malloc((strlen(token)+1)*sizeof(char));
     strcpy(args[i],token);
     i++;
