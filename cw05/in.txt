@@ -1,2 +1,0 @@
-prog arg2 arg3 | prog arg2
-asda cos raz | dwa trzy cztery | ja pierdole
