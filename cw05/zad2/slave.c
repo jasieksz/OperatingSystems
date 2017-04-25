@@ -4,13 +4,17 @@
 #include <stdio.h>
 #include <complex.h>
 #include <time.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define RMAX 1
 #define RMIN -2
 #define IMAX 1
 #define IMIN -1
 
-void writePoints(int fd, int K);
+void writePoint(int fd, int K);
 int getIter(double complex c, int K);
 
 int main(int argc, char *argv[]){
@@ -38,17 +42,19 @@ int main(int argc, char *argv[]){
 }
 
 void writePoint(int fd, int K){
-  char *buf = (char *) malloc(100 * sizeof(char));
+  char buf[100];
 
-  double re = ((double) rand() / (double) RAND_MAX) * (double)(RMAX - RMIN) + RMIN;
-  double im = ((double) rand() / (double) RAND_MAX) * (double)(IMAX - IMIN) + IMIN;
+  double re = -5.0;
+  re = ((double) rand() / (double) RAND_MAX) * (double)(RMAX - RMIN) + RMIN;
+  double im = -5.0;
+  im = ((double) rand() / (double) RAND_MAX) * (double)(IMAX - IMIN) + IMIN;
   double complex c = re + im * I;
 
   int iter = getIter(c, K);
-
-  sprintf(buf, "%lf %lf %i\n", re, im, it); //if ?
-  write(fd,buf,100);
-  free(buf);
+  if (re > RMIN && re < RMAX && im > IMIN && im < IMAX){
+    sprintf(buf, "%lf %lf %i\n", re, im, iter); 
+    write(fd,buf,strlen(buf));
+  }
 }
 
 int getIter(double complex c, int K){

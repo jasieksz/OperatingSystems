@@ -7,4 +7,7 @@ set(CMAKE_C_STANDARD C11)
 add_executable(master master.c)
 add_executable(slave slave.c)
 
-install(TARGETS pipes DESTINATION ./zad2)
+target_link_libraries(slave m)
+
+install(TARGETS master DESTINATION ./zad2)
+install(TARGETS slave DESTINATION ./zad2)

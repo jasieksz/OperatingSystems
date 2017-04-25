@@ -5,12 +5,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #define RMAX 1
 #define RMIN -2
 #define IMAX 1
 #define IMIN -1
-#define K 10
+#define K 100
 
 int R;
 
@@ -27,16 +28,20 @@ int main(int argc, char *argv[]){
 
   mkfifo(path, 0666);
   FILE *pip = fopen(path,"r");
+  if (pip == NULL){
+    perror("Fopen failed");
+    exit(1);
+  }
 
   int **T = calloc(R, sizeof(int*));
   for (int i=0; i < R; i++) T[i] = calloc(R, sizeof(int));
 
-  char *line;
-  size_t len;
+  char *line = NULL;
+  size_t len = 0;
   ssize_t read;
 
   while ((read = getline(&line,&len,pip)) != -1){
-    if (read > 0){
+    if (read >= 1){
       double re = 0;
       double im = 0;
       int iter = 0;
@@ -59,14 +64,14 @@ int main(int argc, char *argv[]){
   fflush(gplot);
   getc(stdin);
   pclose(gplot);
-  
+
   return 0;
 }
 
 void setData(int **T){
   FILE *data = fopen("data","w");
   if (data == NULL){
-    perror("Writing data failed")
+    perror("Writing data failed");
     exit(1);
   }
   for (int i=0;i<R;i++)
