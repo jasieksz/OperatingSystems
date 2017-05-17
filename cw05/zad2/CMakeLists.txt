@@ -8,6 +8,7 @@ add_executable(master master.c)
 add_executable(slave slave.c)
 
 target_link_libraries(slave m)
+target_link_libraries(master m)
 
 install(TARGETS master DESTINATION ./zad2)
 install(TARGETS slave DESTINATION ./zad2)
