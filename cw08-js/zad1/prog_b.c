@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-//tkm 2 7 16
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -10,9 +10,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 //CONSTANTS
-#define MAX_THREADS 10
+#define MAX_THREADS 100
 #define RECORD_SIZE 1024
 #define MAX_RR 10 //records per read
 
@@ -31,6 +32,7 @@ pthread_mutex_t kill_mutex;
 int n_threads; //number of thread, records per read, file desc
 pthread_t *threads;
 int pause_threads = 1; //bool - wait for all threads to create
+int threads_killed = 0;
 
 int main(int argc, char *argv[]){
   if(argc != 5) {
@@ -94,26 +96,40 @@ void* search(void *arg) {
   while(pause_threads); // wait for all
 
   while (!loopexit){
+
     pthread_testcancel();
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-    pthread_mutex_lock(&read_mutex);
+    if (pthread_mutex_trylock(&read_mutex) == EBUSY)
+      printf("%s\n","BUSY MUTEX LOCK" );
+
     for (int i = 0; i < n_rr; i++){
       read_bytes = read(fd, buffer, buffer_size);
-      buf[i] = buffer;
-      if (read_bytes == 0)
+      if (read_bytes == 0){
         loopexit = 1;
+        break;
+      } else
+        buf[i] = buffer;
     }
+
     pthread_mutex_unlock(&read_mutex);
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_testcancel();
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
     for (int i = 0; i < n_rr; i++){
       buffer = buf[i];
-      if (fit(buffer) != 0){
+      if (buffer != NULL && fit(buffer) != 0){
         printf("TID: %ld Record ID: %d\n", (long) pthread_self(), get_record_id());
         loopexit = 1;
-        kill_threads(pthread_self()); //it might exit before reading every line loaded
+        if (!threads_killed){
+          threads_killed = 1;
+          kill_threads(pthread_self()); //it might exit before reading every line loaded
+        }
         pthread_exit(NULL);
       }
     }
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
   }
   pthread_exit(NULL);
