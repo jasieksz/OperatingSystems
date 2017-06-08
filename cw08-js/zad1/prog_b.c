@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-
+//tkm 2 7 16
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -104,16 +104,17 @@ void* search(void *arg) {
         loopexit = 1;
     }
     pthread_mutex_unlock(&read_mutex);
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     for (int i = 0; i < n_rr; i++){
       buffer = buf[i];
       if (fit(buffer) != 0){
         printf("TID: %ld Record ID: %d\n", (long) pthread_self(), get_record_id());
         loopexit = 1;
-        kill_threads(pthread_self());
+        kill_threads(pthread_self()); //it might exit before reading every line loaded
         pthread_exit(NULL);
       }
     }
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
   }
   pthread_exit(NULL);
 }
