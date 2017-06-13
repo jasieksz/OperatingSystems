@@ -99,9 +99,9 @@ void* search(void *arg) {
 
     pthread_testcancel();
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-    if (pthread_mutex_trylock(&read_mutex) == EBUSY)
-      printf("%s\n","BUSY MUTEX LOCK" );
-
+    // if (pthread_mutex_trylock(&read_mutex) == EBUSY)
+    //   printf("%s\n","BUSY MUTEX LOCK" );
+    pthread_mutex_lock(&read_mutex);
     for (int i = 0; i < n_rr; i++){
       read_bytes = read(fd, buffer, buffer_size);
       if (read_bytes == 0){

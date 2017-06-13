@@ -33,6 +33,9 @@ int main(int argc, char* argv[]) { // ./generator in.txt 10
         }
         stream[j-1]='\0';
         stream[j-2]='\n';
+        if (i == 2 || i == 7 || i == 16){
+          stream[32]='c'; stream[33]='a'; stream[34]='t'; stream[35]='s';
+        }
         if (fwrite(stream, sizeof(char), RECORD_SIZE, file) != RECORD_SIZE) {
             perror("fwrite failed");
             exit(1);
