@@ -1,19 +1,29 @@
+#include <wait.h>
+#include <time.h>
 #include "tree_norm.h"
 
+char com;
+time_t time1;
+
 int main(int argc, char *argv[]){
-    if (argc != 3) {
+    if (argc != 4) {
         printf("Bledna ilosc argumentow");
         exit(EXIT_FAILURE);
     }
 
     char root[PATH_MAX + 1];
-    int size = atoi(argv[2]);
     realpath(argv[1], root);
-    printDirectory(root, size);
+    com = argv[2][0];
+    char *stime = argv[3];
+    struct tm tm;
+    strptime(stime, "%Y-%m-%d", &tm);
+    time1 = mktime(&tm);
+    printDirectory(root);
+
     return 0;
 }
 
-void printDirectory(char *filePath, int size) {
+void printDirectory(char *filePath) {
     struct dirent *dirent;
     char *newPath;
     struct stat file;
@@ -34,22 +44,46 @@ void printDirectory(char *filePath, int size) {
                 printf("Geting stats failed\n");
                 exit(EXIT_FAILURE);
             }
-            if(S_ISREG(file.st_mode) && file.st_size < size) {
-                strftime(timeBuffer, sizeof(timeBuffer), "%d.%m.%Y %H:%M:%S", localtime(&file.st_mtime));
-                char *permisions = getPermissions(file);
-                printf("\nPath: %s\n", newPath);
-                printf("Size: %d\n", (int)file.st_size);
-                printf("Rights : %s\n",permisions);
-                printf("Last modified %s\n", timeBuffer);
-                free(permisions);
+            if(S_ISREG(file.st_mode)) {
+                double dt = difftime(file.st_mtime, time1); // mtime - time1
+                if (com == '<' && dt < 0){
+                    printFileInfo(file, newPath);
+                } else if (com == '>' && dt > 0){
+                    printFileInfo(file, newPath);
+                } else if (com == '=' && dt == 0){
+                    printFileInfo(file, newPath);
+                }
             }
             if(S_ISDIR(file.st_mode)) {
-                printDirectory(newPath, size);
+                pid_t pid = fork();
+                if (pid == 0){ //child
+                    printf("CHILD\n");
+                    printDirectory(newPath);
+                    exit(EXIT_SUCCESS);
+                } else if (pid > 0){
+                    int status;
+                    wait(&status);
+
+                    printf("PARENT\n");
+                }
             }
             free(newPath);
         }
     }
     closedir(pDir);
+}
+
+void printFileInfo(const struct stat file, const char *newPath) {
+    char timeBuffer[20];
+    char *permisions;
+    strftime(timeBuffer, 20, "%d.%m.%Y %H:%M:%S", localtime(&((file).st_mtime)));
+    permisions = getPermissions((file));
+
+    printf("\nPath : %s\n",newPath);
+    printf("Size : %i\n",(int)(file).st_size);
+    printf("Rights : %s\n",permisions);
+    printf("Date modified : %s\n",timeBuffer);
+    free(permisions);
 }
 
 char *getPermissions(struct stat file) {

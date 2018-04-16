@@ -1,17 +1,24 @@
 #include "tree.h"
 
 //./program [path] [size]
-int size;
+char com;
+time_t time1;
 
 int main(int argc, char *argv[]){
-    if (argc != 3){
-        perror("Bledna ilsoc arguemtnow");
+    if (argc != 4){
+        perror("Bledna ilsoc arguemtnow - ./nftwprogram path {<,>,=} data");
         exit(EXIT_FAILURE);
     } else {
         char root[PATH_MAX + 1];
-        size = atoi(argv[2]);
         realpath(argv[1], root);
+        com = argv[2][0];
+        char *stime = argv[3];
+        struct tm tm;
+        strptime(stime, "%Y-%m-%d", &tm);
+        time1 = mktime(&tm);
+
         return printDirectory(root);
+
     }
 return 0;
 }
@@ -23,8 +30,15 @@ int printDirectory(char *currentPath) {
 }
 
 int conditionChecker(const char *fpath, const struct stat *file, int tflag, struct FTW *ftwbuf) {
-    if(tflag == FTW_F && file->st_size < size){
-        printFileInfo(file, fpath);
+    if(tflag == FTW_F){
+        double dt = difftime(file->st_mtime, time1); // mtime - time1
+        if (com == '<' && dt < 0){
+            printFileInfo(file, fpath);
+        } else if (com == '>' && dt > 0){
+            printFileInfo(file, fpath);
+        } else if (com == '=' && dt == 0){
+            printFileInfo(file, fpath);
+        }
     }
     return 0;
 }

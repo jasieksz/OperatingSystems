@@ -19,6 +19,10 @@ void shuffler(const char* fileName, size_t recordSize,size_t recordsNumber, void
 void libShuffler(const char* fileName, size_t recordSize, size_t recordsNumber);
 void sysShuffler(const char* fileName, size_t recordSize, size_t recordsNumber);
 
+int copier(const char* fileNameOne, const char* fileNameTwo, size_t recordSize, size_t recordsNumber, int (*f)(const char*, const char*, size_t, size_t));
+int libCopier(const char* fileNameOne, const char* fileNameTwo, size_t recordSize, size_t recordsNumber);
+int sysCopier(const char* fileNameOne, const char* fileNameTwo, size_t recordSize, size_t recordsNumber);
+
 void libSwap(FILE* file, size_t i, size_t j, size_t recordSize);
 void sysSwap(int file, size_t i, size_t j, size_t recordSize);
 

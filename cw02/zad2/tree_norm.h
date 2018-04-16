@@ -13,8 +13,8 @@
 #include <dirent.h>
 #include <time.h>
 
-void printDirectory(char *filePath, int size);
-void printFileInfo(const struct stat *file, const char *newPath);
+void printDirectory(char *filePath);
+void printFileInfo(const struct stat file, const char *newPath);
 char *getPermissions(struct stat file);
 
 #endif

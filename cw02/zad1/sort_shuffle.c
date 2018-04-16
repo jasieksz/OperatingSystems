@@ -1,10 +1,9 @@
+#include <time.h>
 #include "sort_shuffle.h"
 
 
 int main(int argc, char* argv[]){
-    if (argc != 6)
-        printf("Bledna ilosc arguemntow\n");
-    else { //./program sys shuffle datafile 100 512
+    if (argc == 6) {
         char* fileName = argv[3];
         size_t recordsNumber = (size_t) atoi(argv[4]);
         size_t recordSize = (size_t) atoi(argv[5]);
@@ -16,9 +15,28 @@ int main(int argc, char* argv[]){
         else if(strcmp(argv[2], "generate") == 0)
             generate(fileName,recordSize,recordsNumber);
         else {
-            printf("Nie ma takiej funkcji\n");
+            printf("NIE ma takiej funkcji\n");
             exit(EXIT_FAILURE);
         }
+    } else if (argc == 7){
+        char* fileName1 = argv[3];
+        char* fileName2 = argv[4];
+        size_t recordsNumber = (size_t) atoi(argv[5]);
+        size_t recordSize = (size_t) atoi(argv[6]);
+
+        if(strcmp(argv[2], "copy") == 0){
+            int res = copier(fileName1, fileName2, recordSize, recordsNumber, strcmp(argv[1], "sys") ? libCopier : sysCopier);
+            if (res != 0){
+                exit(EXIT_FAILURE);
+            }
+        }
+        else {
+            printf("NIE ma takiej funkcji\n");
+            exit(EXIT_FAILURE);
+        }
+
+    } else {
+        printf("Bledne argumenty\n./program sys shuffle datafile 100 512\n");
     }
     return EXIT_SUCCESS;
 }
@@ -54,12 +72,18 @@ void libSorter(const char *fileName, size_t recordSize, size_t recordsNumber){
 
             fseek(file, (i-1)*recordSize, SEEK_SET);
             if (fread(first,1,1,file) != 1){
+                if (feof(file)) {
+                    printf ("END OF FILE\n");
+                }
                 perror("Reading file failed\n");
                 exit(EXIT_FAILURE);
             }
 
             fseek(file,i*recordSize,SEEK_SET);
             if (fread(second,1,1,file) != 1){
+                if (feof(file)) {
+                    printf ("END OF FILE\n");
+                }
                 perror("Reading file failed\n");
                 exit(EXIT_FAILURE);
             }
@@ -143,12 +167,18 @@ void libSwap(FILE* file, size_t i, size_t j, size_t recordSize){
 
     fseek(file, i*recordSize, SEEK_SET);
     if (fread(first,recordSize,1,file) != 1){
+        if (feof(file)) {
+            printf ("END OF FILE\n");
+        }
         perror("Reading file failed\n");
         exit(EXIT_FAILURE);
     }
 
     fseek(file, j*recordSize, SEEK_SET);
     if (fread(second,recordSize,1,file) != 1){
+        if (feof(file)) {
+            printf ("END OF FILE\n");
+        }
         perror("Reading file failed\n");
         exit(EXIT_FAILURE);
     }
@@ -201,6 +231,55 @@ void sysSwap(int file, size_t i, size_t j, size_t recordSize){
     free(second);
 }
 
+int copier(const char* fileNameOne, const char* fileNameTwo, size_t recordSize, size_t recordsNumber, int (*f)(const char*, const char*, size_t, size_t)){
+    double userStartTime, userEndTime,sysStartTime, sysEndTime;
+    getTime(&userStartTime, &sysStartTime);
+    (*f)(fileNameOne , fileNameTwo, recordSize, recordsNumber);
+    getTime(&userEndTime, &sysEndTime);
+    printf("Copying : user time\t%fs , system time\t%fs\n",userEndTime-userStartTime,sysEndTime-sysStartTime);
+}
+
+int libCopier(const char* from, const char* to, size_t recordSize, size_t recordsNumber){
+    FILE *source = fopen(from, "r");
+    FILE *target = fopen(to, "w+");
+    char *tmp = malloc(recordSize * sizeof(char));
+
+    for (int i = 0; i < recordsNumber; i++){
+        if(fread(tmp, sizeof(char), (size_t) (recordSize + 1), source) != (recordSize + 1)) {
+            return 1;
+        }
+
+        if(fwrite(tmp, sizeof(char), (size_t) (recordSize + 1), target) != (recordSize + 1)) {
+            return 1;
+        }
+    }
+    fclose(source);
+    fclose(target);
+    free(tmp);
+    return 0;
+
+}
+
+int sysCopier(const char* from, const char* to, size_t recordSize, size_t recordsNumber){
+    int source = open(from, O_RDONLY);
+    int target = open(to, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR); // create ifne, wr only, trunc to 0, args with OCR
+    char *tmp = malloc(recordSize * sizeof(char));
+
+    for (int i = 0; i < recordsNumber; i++){
+        if(read(source, tmp, (size_t) (recordSize + 1) * sizeof(char)) != (recordSize + 1)) {
+            return 1;
+        }
+
+        if(write(target, tmp, (size_t) (recordSize + 1) * sizeof(char)) != (recordSize + 1)) {
+            return 1;
+        }
+    }
+    close(source);
+    close(target);
+    free(tmp);
+    return 0;
+}
+
 void getTime(double *user, double *sys){
     struct rusage rusage;
     getrusage(RUSAGE_SELF, &rusage);
@@ -233,3 +312,4 @@ void generate(char* fileName, size_t recordSize, size_t recordsNumber){
     fclose(readFile);
     fclose(writeFile);
 }
+
