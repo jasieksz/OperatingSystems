@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(cw06)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -g -Wall")
-set(CMAKE_C_STANDARD C11)
+set(CMAKE_C_STANDARD 11)
 
 add_executable(server2 server2.c server2.h)
 add_executable(client2 client2.c)

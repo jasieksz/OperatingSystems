@@ -2,13 +2,17 @@
 #define MAXCLIENTS 20
 
 #include "server.h"
+#include <signal.h>
 
-void echo(message msg);
+void mirror(message msg);
 void login(message msg);
 void mtime(message msg);
-void vers(message msg);
+void calc(message msg);
 void sendTo(int id, message *msg);
 int getPidID(pid_t pid);
+
+void sigintHandler(int sig);
+void removeQueue();
 
 int runner = 1;
 char *homedir;
@@ -20,20 +24,30 @@ int msgqid;
 int main(int argc,char **argv) {
   printf("Server %d\n", getpid());
 
+  if(signal(SIGINT, sigintHandler) == SIG_ERR) {
+    perror("SERVER - SIGINT failed");
+    exit(EXIT_FAILURE);
+  }
+
+  if (atexit(removeQueue) == -1){
+		perror("SERVER - atexit() failed");
+		exit(EXIT_FAILURE);
+	}
+
   if ((homedir = getenv("HOME")) == NULL) {
-      perror("Getting homedir failed");
+      perror("SERVER - Getting homedir failed");
       exit(EXIT_FAILURE);
   }
 
   key_t key;
   if((key = ftok(homedir, 'p')) < 0){
-		perror("FTOK failed");
+		perror("SERVER - FTOK failed");
 		exit(EXIT_FAILURE);
 	}
 
   int msgqid = msgget(key, IPC_CREAT | 0666);
 	if (msgqid < 0) {
-		perror("MSG queue failed");
+		perror("SERVER - MSG queue failed");
 		exit(EXIT_FAILURE);
 	}
 
@@ -59,20 +73,20 @@ int main(int argc,char **argv) {
         printf("%s\n","LOGIN request");
         login(myMessage);
         break;
-      case 2: //echo
-        printf("%s\n","ECHO request");
-        echo(myMessage);
+      case 2: //mirror
+        printf("%s\n","MIRROR request");
+        mirror(myMessage);
         break;
       case 3: //time
         printf("%s\n","TIME request");
         mtime(myMessage);
         break;
-      case 4: //vers
-        printf("%s\n","VERS request");
-        vers(myMessage);
+      case 4: //calc
+        printf("%s\n","CALC request");
+        calc(myMessage);
         break;
-      case 5: //terminate
-        printf("%s\n","TERMINATE request");
+      case 5: //end
+        printf("%s\n","END request");
         runner = 0;
         break;
       default:
@@ -125,10 +139,17 @@ void login(message msg) {
   }
 }
 
-void echo(message msg) {
-	message tmp;
-	tmp.mtype = 2; //echo
+void mirror(message msg) {
+  int msg_length = (int) strlen(msg.mtext);
+  for(int i = 0; i < msg_length / 2; ++i) {
+    char buff = msg.mtext[i];
+    msg.mtext[i] = msg.mtext[msg_length - i - 1];
+    msg.mtext[msg_length - i - 1] = buff;
+  }
+  message tmp;
+	tmp.mtype = 2; //mirror
 	tmp.sender = getpid();
+
 	strcpy(tmp.mtext, msg.mtext);
 	int p = getPidID(msg.sender);
 	sendTo(p, &tmp);
@@ -149,19 +170,35 @@ void mtime(message msg) {
 	sendTo(p, &tmp);
 }
 
-void vers(message msg) {
+void calc(message msg) {
   message tmp;
   tmp.mtype = 4;
   tmp.sender = getpid();
-  strcpy(tmp.mtext, msg.mtext);
   int p = getPidID(msg.sender);
 
-  int j = 0;
-  int len = strlen(tmp.mtext);
-  while (j < len ) {
-    if(tmp.mtext[j] >= 97 && tmp.mtext[j] <= 122)
-      tmp.mtext[j] -= 32;
-    j++;
-  }
+  char command[4096];
+  sprintf(command, "echo '%s' | bc", msg.mtext);
+  FILE* calc = popen(command, "r");
+  fgets(msg.mtext, MMSGLEN, calc);
+  pclose(calc);
+  strcpy(tmp.mtext, msg.mtext);
   sendTo(p, &tmp);
+}
+
+void sigintHandler(int sig) {
+    if (sig == SIGINT) {
+        fprintf(stderr, "\nOdebrano sygnal SIGINT\n");
+        signal(SIGINT, SIG_DFL);
+        raise(SIGINT);
+    }
+}
+
+void removeQueue() {
+  if(msgqid <= -1) 
+    return;
+  if (msgctl(msgqid, IPC_RMID, NULL) < 0) {
+    perror("SERVER - Queue delete failed");
+		return;
+  }
+  printf("SERVER - queue deleted\n");
 }

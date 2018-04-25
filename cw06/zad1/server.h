@@ -16,10 +16,10 @@
 #define MMSGLEN 1000
 /*
 1 - login
-2 - echo
+2 - mirror
 3 - time
-4 - vers
-5 - term
+4 - calc
+5 - end
 */
 typedef struct message {
   long mtype;

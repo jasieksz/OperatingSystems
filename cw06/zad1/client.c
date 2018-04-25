@@ -9,10 +9,10 @@ const int lineSize = 100;
 int runner = 1;
 
 void sendToServer(message *msg);
-void terminate();
-void echo();
+void end();
+void mirror();
 void gettime();
-void vers();
+void calc();
 
 int main(int argc,char **argv) {
 
@@ -62,20 +62,20 @@ int main(int argc,char **argv) {
     char c;
 		scanf(" %c", &c);
 		switch(c) {
-      case 'q':
+      case 'q': // quit client
 				runner = 0;
 				break;
-			case 'e':
-				echo();
+			case 'm': // mirror
+				mirror();
 				break;
-			case 'c':
-				terminate();
+			case 'e': // end server req
+				end();
 				break;
-      case 't':
+      case 't': // time 
         gettime();
         break;
-      case 'v':
-        vers();
+      case 'c': // calc
+        calc();
         break;
       default:
         perror("Invalid argument");
@@ -100,14 +100,14 @@ void sendToServer(message *msg) {
   }
 }
 
-void terminate() {
+void end() {
 	message tmp;
 	tmp.mtype = 5;
 	tmp.sender = getpid();
 	sendToServer(&tmp);
 }
 
-void echo() {
+void mirror() {
 	char c;
 	printf("Enter the line:\n");
 	while ((c = getchar()) != '\n' && c != EOF) {}
@@ -143,7 +143,7 @@ void gettime() {
   printf("%s\n", msg.mtext);
 }
 
-void vers() {
+void calc() {
   char c;
 	printf("Enter line:\n");
 	while ((c = getchar()) != '\n' && c != EOF) {}
@@ -163,6 +163,6 @@ void vers() {
 
 	message msg;
 	msgrcv(msgqid, &msg, MSG_SIZE, 0, 0);
-  printf("%s\n", msg.mtext);
+  printf("%s", msg.mtext);
 
 }
