@@ -1,5 +1,5 @@
-#ifndef BOUNDED_H
-#define BOUNDED_H
+#ifndef PBOUNDED_H
+#define PBOUNDED_H
 
 
 #define _GNU_SOURCE
@@ -29,12 +29,4 @@
 #define VERBOSE 3
 
 
-
-typedef struct Area {
-    int x0;
-    int x1;
-
-} Area;
-
-
-#endif /* BOUNDED_H */
+#endif /* PBOUNDED_H */

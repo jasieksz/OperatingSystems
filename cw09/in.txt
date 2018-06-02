@@ -1,0 +1,77 @@
+git
+pacman
+pacman -h
+pacman -Syyu
+sudo pacman -Syyu
+pacman -S git
+sudo pacman -S git
+python --version
+pip
+pacman -h
+pacman --help
+sudo pacman -S python
+pip
+sudo pacman -Syu
+sudo pacman-mirrors -f 0 && sudo pacman -Syy
+pacman -Syu pacman-mirrorlist
+sudo pacman -Syu pacman-mirrorlist
+sudo pacman-mirrors -f 0 && sudo pacman -Syy
+ls
+cd ..
+ls
+cd ..
+cd etc/pacman.d/
+ls
+echo
+pwd
+cp mirrorlist mirrorlist.backup
+sudo cp mirrorlist mirrorlist.backup
+ls
+nano mirrorlist.backup
+pip
+sudo pacman -S python-pip
+ls
+cd ..
+cd ..
+cd home/
+cd jasiek/
+ls
+jupyter notebook
+sudo pacman -S jupyter-notebook
+yaourt
+nano /etc/pacman.conf
+pacman -Syu yaourt
+sudo pacman -Syu yaourt
+yaourt
+yaourt - h
+yaourt -h
+sudo pacman -S vlc
+sudo pacman -S atom
+sudo pacman -Syu
+sudo pacman -S arc-gtk-theme
+plank
+arc
+sudo pacman -S plank
+sudo pacman -S spotify
+pacman -S numix-icon-theme-circle
+sudo pacman -S numix-icon-theme-circle
+sudo pacman -R plank
+pacman -S gimp
+sudo pacman -S gimp
+sudo pacman -S spotify-client
+snap
+yaourt -S spotify
+adasf
+yaourt -Syy spotify
+sudo pacman -S gnome-shell-extensions-mpris-indicator-button
+sudo yaourt -S gnome-shell-extensions-mpris-indicator-button
+ls
+cd Downloads
+ls
+mkdir instalki
+cd instalki/
+ls
+git clone https://github.com/JasonLG1979/gnome-shell-extensions-mpris-indicator-button.git
+cd gnome-shell-extensions-mpris-indicator-button/
+cp -a mprisindicatorbutton@JasonLG1979.github.io ~/.local/share/gnome-shell/extensions/
+gnome-shell-extension-prefs

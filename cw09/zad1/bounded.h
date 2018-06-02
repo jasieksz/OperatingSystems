@@ -28,13 +28,4 @@
 #define SILENT 2
 #define VERBOSE 3
 
-
-
-typedef struct Area {
-    int x0;
-    int x1;
-
-} Area;
-
-
 #endif /* BOUNDED_H */

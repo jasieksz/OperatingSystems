@@ -1,15 +1,6 @@
 #include "bounded.h"
 
-
-
-int threadsReady = 0;
-pthread_t *PRODUCENTS;
-pthread_t *CONSUMERS;
-char **BOUNDED_BUFFER;
 FILE *in;
-
-int producentsNumber, consumentsNumber;
-int N;
 const char *path;
 int searchValue;
 int searchMode;
@@ -20,7 +11,33 @@ int runTime;
  * THREAD
  */
 
-void *fun(void *);
+int producersNumber, consumersNumber;
+pthread_t *PRODUCERS;
+pthread_t *CONSUMERS;
+int threadsReady = 0;
+
+void *producerFun(void *);
+
+void *consumerFun(void *);
+
+void createThreads();
+
+void endThreads();
+
+/*
+ *  BUFFER
+ */
+
+int N;
+char **BOUNDED_BUFFER;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t empty = PTHREAD_COND_INITIALIZER;
+pthread_cond_t full = PTHREAD_COND_INITIALIZER;
+int inPos, outPos, count;
+
+int insertElement(char *);
+
+int removeElement(char **);
 
 /*
  * HELPERS
@@ -38,8 +55,7 @@ void openFiles(const char *);
 
 void terminate(char *);
 
-
-int max(int, int);
+void longerSleep();
 
 
 int main(int argc, char const *argv[]) {
@@ -51,8 +67,8 @@ int main(int argc, char const *argv[]) {
      * INITIALIZE
      */
 
-    producentsNumber = (int) strtol(argv[1], NULL, 10);
-    consumentsNumber = (int) strtol(argv[2], NULL, 10);
+    producersNumber = (int) strtol(argv[1], NULL, 10);
+    consumersNumber = (int) strtol(argv[2], NULL, 10);
     N = (int) strtol(argv[3], NULL, 10);
     path = argv[4];
     searchValue = (int) strtol(argv[5], NULL, 10);
@@ -61,26 +77,26 @@ int main(int argc, char const *argv[]) {
     runTime = (int) strtol(argv[8], NULL, 10);
 
     initialize();
+    createThreads();
 
     /*
      * WORK
      */
 
-
-    if (pthread_create(0, NULL, &fun, NULL) != 0)
-        terminate("Thread create failed");
-
-
-    printf("Threads ready\n");
-    threadsReady = 1;
+    if (runTime != 0) {
+        sleep((unsigned int) runTime);
+        //longerSleep();
+    } else if (runTime == 0) {
+        while (!feof(in)) {
+            // DO NOTHING
+        }
+    }
 
     /*
      * END
      */
 
-    if (pthread_join(0, NULL) != 0)
-        terminate("Thread join failed");
-
+    endThreads();
 
     return 0;
 }
@@ -90,22 +106,121 @@ int main(int argc, char const *argv[]) {
  * THREADS RELATED
  */
 
-void *fun(void *arg) {
+void *producerFun(void *arg) {
+    printf("PRODUCER %lu CREATED\n", pthread_self());
+    char *element = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+
+    while ((read = getline(&element, &len, in)) != -1) {
+        if (insertElement(element))
+            terminate("Failed to insert element");
+        else {
+            printf("PRODUCER %lu | %s\n", pthread_self(), element);
+        }
+
+        sleep((unsigned int) (rand() % 5 + 1));
+    }
     return NULL;
 }
 
+void *consumerFun(void *arg) {
+    printf("CONSUMER %lu CREATED\n", pthread_self());
+    char *element;
+    while (1) {
+        if (removeElement(&element))
+            terminate("Failed to remove element");
+        else {
+            printf("CONSUMER %lu | %s\n", pthread_self(), element);
+            // TODO : search element size etc...
+        }
+
+        sleep((unsigned int) (rand() % 5 + 1));
+    }
+    return NULL;
+}
+
+void createThreads() {
+    for (int i = 0; i < producersNumber; i++) {
+        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, NULL) != 0)
+            terminate("Producer thread create failed");
+    }
+
+    for (int i = 0; i < consumersNumber; i++) {
+        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, NULL) != 0)
+            terminate("Consumer thread create failed");
+    }
+
+    printf("Threads ready\n");
+    threadsReady = 1;
+}
+
+void endThreads() {
+    for (int i = 0; i < producersNumber; i++) {
+        if (pthread_join(PRODUCERS[i], NULL) != 0)
+            terminate("Thread join failed");
+    }
+
+    for (int i = 0; i < consumersNumber; i++) {
+        if (pthread_join(CONSUMERS[i], NULL) != 0)
+            terminate("Thread join failed");
+    }
+}
+
+/*
+ * BUFFER
+ */
+
+int insertElement(char *element) {
+    int success;
+    pthread_mutex_lock(&mutex);
+    pthread_cond_wait(&empty, &mutex);
+
+    if (count != N) {
+        BOUNDED_BUFFER[inPos] = malloc(sizeof(char) * strlen(element));
+        strcpy(BOUNDED_BUFFER[inPos], element);
+        inPos = (inPos + 1) % N;
+        count += 1;
+        success = 0;
+    } else
+        success = -1;
+
+    pthread_mutex_unlock(&mutex);
+    pthread_cond_signal(&full);
+    return success;
+}
+
+int removeElement(char **element) {
+    int success;
+    pthread_mutex_lock(&mutex);
+    pthread_cond_wait(&full, &mutex);
+
+    if (count != N) {
+        *element = malloc(sizeof(char) * strlen(BOUNDED_BUFFER[outPos]));
+        strcpy(*element, BOUNDED_BUFFER[outPos]);
+        free(BOUNDED_BUFFER[outPos]);
+        outPos = (outPos + 1) % N;
+        count -= 1;
+        success = 0;
+    } else
+        success = -1;
+
+    pthread_mutex_unlock(&mutex);
+    pthread_cond_signal(&empty);
+    return success;
+}
 
 /*
  * HELPERS
  */
 
 void initialize() {
+    PRODUCERS = malloc(sizeof(pthread_t) * producersNumber);
+    CONSUMERS = malloc(sizeof(pthread_t) * consumersNumber);
     BOUNDED_BUFFER = malloc(sizeof(char *) * N);
-    for (int i = 0; i < N; i++) {
-        BOUNDED_BUFFER[i] = malloc(sizeof(char) * MAX_LENGTH);
-
-    }
     openFiles(path);
+    inPos = outPos = count = 0;
 
     if (atexit(cleanUp) != 0)
         terminate("Exit handler failed");
@@ -120,6 +235,10 @@ void cleanUp() {
         free(BOUNDED_BUFFER[i]);
     }
     free(BOUNDED_BUFFER);
+
+    pthread_cond_destroy(&full);
+    pthread_cond_destroy(&empty);
+    pthread_mutex_destroy(&mutex);
 }
 
 int getSearchMode(const char *string) {
@@ -140,7 +259,7 @@ int getOutMode(const char *string) {
 
 void openFiles(const char *path) {
     if (!(in = fopen(path, "r")))
-        terminate("Image open failed");
+        terminate("File open failed");
 }
 
 void terminate(char *msg) {
@@ -148,9 +267,13 @@ void terminate(char *msg) {
     exit(EXIT_FAILURE);
 }
 
-
-int max(int a, int b) {
-    return a > b ? a : b;
+void longerSleep(){
+    clock_t startTime = clock();
+    clock_t stopTime = clock();
+    double elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
+    while (elapsed <= runTime) {
+        // DO NOTHING
+        stopTime = clock();
+        elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
+    }
 }
-
-
