@@ -56,6 +56,7 @@ void terminate(char *);
 
 void longerSleep();
 
+void removeEndLine(char *);
 
 int main(int argc, char const *argv[]) {
 
@@ -116,10 +117,11 @@ void *producerFun(void *param) {
 
 
     while ((read = getline(&element, &len, in)) != -1) {
+        removeEndLine(element);
         if (insertElement(element))
             terminate("Failed to insert element");
-        else {
-            printf("PRODUCER %d | %s", arg, element);
+        else if (outMode == VERBOSE) {
+            printf("PRODUCER %d | %s\n", arg, element);
         }
 
         sleep((unsigned int) (rand() % 3 + 1));
@@ -131,13 +133,19 @@ void *consumerFun(void *param) {
     int arg = (int) param;
     printf("CONSUMER %d CREATED\n", arg);
     char *element;
+    int indx;
     while (1) {
         if (removeElement(&element))
             terminate("Failed to remove element");
-        else {
-            printf("CONSUMER %d | %s", arg, element);
-            // TODO : search element size etc...
+        else if (outMode == VERBOSE) {
+            printf("CONSUMER %d | %s\n", arg, element);
         }
+        if (searchMode == LS_MODE && strlen(element) < searchValue)
+            printf("CONSUMER %d | FOUND %s AT %d", arg, element, indx);
+        if (searchMode == EQ_MODE && strlen(element) == searchValue)
+            printf("CONSUMER %d | FOUND %s AT %d", arg, element, indx);
+        if (searchMode == GT_MODE && strlen(element) > searchValue)
+            printf("CONSUMER %d | FOUND %s AT %d", arg, element, indx);
 
         sleep((unsigned int) (rand() % 3 + 1));
     }
@@ -282,4 +290,8 @@ void longerSleep(){
         stopTime = clock();
         elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
     }
+}
+
+void removeEndLine(char *string){
+    string[strlen(string)-1] = '\0';
 }
