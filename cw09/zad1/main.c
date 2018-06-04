@@ -22,7 +22,7 @@ void *consumerFun(void *);
 
 void createThreads();
 
-//void endThreads();
+void endThreads();
 
 /*
  *  BUFFER
@@ -58,6 +58,8 @@ void terminate(char *);
 //void longerSleep();
 
 void removeEndLine(char *);
+
+void sigintHandler(int sig);
 
 
 int main(int argc, char const *argv[]) {
@@ -95,6 +97,7 @@ int main(int argc, char const *argv[]) {
      */
 
     printf("THE END\n");
+    endThreads(); // TODO : add cancelation point in funs()
     return 0;
 }
 
@@ -104,7 +107,7 @@ int main(int argc, char const *argv[]) {
  */
 
 void *producerFun(void *param) {
-    int arg = (int) param;
+    int arg = (int) (long long) param;
     printf("PRODUCER %d CREATED\n", arg);
     char *element = NULL;
     size_t len = 0;
@@ -120,7 +123,7 @@ void *producerFun(void *param) {
 
         sleep((unsigned int) (rand() % 3 + 1));
     }
-    if (read == -1) { // EOF reached - time to finish
+    if (runTime == 0 && read == -1) { // EOF reached - time to finish
         myEOF = 1;
         pthread_cond_broadcast(&canConsume); // if any Consumer is stuck in removeElement, let him know
     }
@@ -128,7 +131,7 @@ void *producerFun(void *param) {
 }
 
 void *consumerFun(void *param) {
-    int arg = (int) param;
+    int arg = (int) (long long) param;
     printf("CONSUMER %d CREATED\n", arg);
     char *element;
     int indx;
@@ -153,27 +156,28 @@ void *consumerFun(void *param) {
 
 void createThreads() {
     for (int i = 0; i < producersNumber; i++) {
-        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *) (i)) != 0)
+        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *) ((long long) i)) != 0)
             terminate("Producer thread create failed");
     }
 
     for (int i = 0; i < consumersNumber; i++) {
-        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *) (i)) != 0)
+        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *) ((long long) i)) != 0)
             terminate("Consumer thread create failed");
     }
 }
 
-//void endThreads() {
-//    for (int i = 0; i < producersNumber; i++) {
-//        if (pthread_join(PRODUCERS[i], NULL) != 0)
-//            terminate("Thread join failed");
-//    }
-//
-//    for (int i = 0; i < consumersNumber; i++) {
-//        if (pthread_join(CONSUMERS[i], NULL) != 0)
-//            terminate("Thread join failed");
-//    }
-//}
+void endThreads() {
+    printf("END THREAADS\n");
+   for (int i = 0; i < producersNumber; i++) {
+       if (pthread_join(PRODUCERS[i], NULL) != 0)
+           terminate("Thread join failed");
+   }
+
+   for (int i = 0; i < consumersNumber; i++) {
+       if (pthread_join(CONSUMERS[i], NULL) != 0)
+           terminate("Thread join failed");
+   }
+}
 
 /*
  * BUFFER
@@ -232,7 +236,11 @@ void initialize() {
     CONSUMERS = malloc(sizeof(pthread_t) * consumersNumber);
     BOUNDED_BUFFER = malloc(sizeof(char *) * N);
     openFiles(path);
+
     inPos = outPos = count = myEOF = 0;
+
+    if (signal(SIGINT, sigintHandler) == SIG_ERR)
+        terminate("Signal handler failed");
 
     if (atexit(cleanUp) != 0)
         terminate("Exit handler failed");
@@ -292,4 +300,11 @@ void terminate(char *msg) {
 
 void removeEndLine(char *string) {
     string[strlen(string) - 1] = '\0';
+}
+
+void sigintHandler(int sig) {
+    if (sig == SIGINT && runTime == 0) {
+        printf("\nReceived SIGINT - closing\n");
+        exit(EXIT_SUCCESS);
+    }
 }

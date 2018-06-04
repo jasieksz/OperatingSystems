@@ -31,7 +31,7 @@ void createThreads();
 int N;
 char **BOUNDED_BUFFER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-sem_t empty, full;
+sem_t canProduce, canConsume;
 int inPos, outPos, count;
 
 int insertElement(char *);
@@ -105,7 +105,7 @@ int main(int argc, char const *argv[]) {
  */
 
 void *producerFun(void *param) {
-    int arg = (int) param;
+    int arg = (int)(long long) param;
     printf("PRODUCER %d CREATED\n", arg);
     char *element = NULL;
     size_t len = 0;
@@ -121,7 +121,7 @@ void *producerFun(void *param) {
 
         sleep((unsigned int) (rand() % 3 + 1));
     }
-    if (read == -1) { // EOF reached - time to finish
+    if (read == -1 && runTime == 0) { // EOF reached - time to finish
         myEOF = 1;
 //        pthread_cond_broadcast(&canConsume); // if any Consumer is stuck in removeElement, let him know
         //TODO 1 : do i need to notify?
@@ -130,7 +130,7 @@ void *producerFun(void *param) {
 }
 
 void *consumerFun(void *param) {
-    int arg = (int) param;
+    int arg = (int) (long long) param;
     printf("CONSUMER %d CREATED\n", arg);
     char *element = NULL;
     int indx = -1;
@@ -155,12 +155,12 @@ void *consumerFun(void *param) {
 
 void createThreads() {
     for (int i = 0; i < producersNumber; i++) {
-        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *) (i)) != 0)
+        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *) ((long long) i)) != 0)
             terminate("Producer thread create failed");
     }
 
     for (int i = 0; i < consumersNumber; i++) {
-        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *) (i)) != 0)
+        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *) ((long long) i)) != 0)
             terminate("Consumer thread create failed");
     }
 }
@@ -183,7 +183,7 @@ void createThreads() {
 
 int insertElement(char *element) {
     int success;
-    sem_wait(&empty);
+    sem_wait(&canProduce); // -- if 0 then wait
     pthread_mutex_lock(&mutex);
 
     if (count != N) {
@@ -196,13 +196,13 @@ int insertElement(char *element) {
         success = -1;
 
     pthread_mutex_unlock(&mutex);
-    sem_post(&full);
+    sem_post(&canConsume); // ++
     return success;
 }
 
 int removeElement(char **element, int *i) {
     int success;
-    sem_wait(&full);
+    sem_wait(&canConsume);
     pthread_mutex_lock(&mutex);
 
     if (count != N && count != 0) { // count != 0 might be used after myEOF = 1 and consumer was stuck on canConsume
@@ -217,7 +217,7 @@ int removeElement(char **element, int *i) {
         success = -1;
 
     pthread_mutex_unlock(&mutex);
-    sem_post(&empty);
+    sem_post(&canProduce);
     return success;
 }
 
@@ -231,8 +231,8 @@ void initialize() {
     BOUNDED_BUFFER = malloc(sizeof(char *) * N);
     openFiles(path);
 
-    sem_init(&empty, 0, (unsigned int) N); // All of buffer is empty
-    sem_init(&full, 0, 0);
+    sem_init(&canProduce, 0, (unsigned int) N);
+    sem_init(&canConsume, 0, 0);
 
     inPos = outPos = count = myEOF = 0;
 
@@ -253,8 +253,8 @@ void cleanUp() {
     }
     free(BOUNDED_BUFFER);
 
-    sem_destroy(&empty);
-    sem_destroy(&full);
+    sem_destroy(&canProduce);
+    sem_destroy(&canConsume);
     pthread_mutex_destroy(&mutex);
 }
 
@@ -300,8 +300,8 @@ void removeEndLine(char *string) {
 }
 
 void sigintHandler(int sig) {
-    if (sig == SIGINT) {
-        printf("Received SIGINT - closing");
+    if (sig == SIGINT && runTime == 0) {
+        printf("\nReceived SIGINT - closing\n");
         exit(EXIT_SUCCESS);
     }
 }
