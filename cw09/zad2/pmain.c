@@ -6,6 +6,7 @@ int searchValue;
 int searchMode;
 int outMode;
 int runTime;
+int myEOF;
 
 /*
  * THREAD
@@ -14,7 +15,6 @@ int runTime;
 int producersNumber, consumersNumber;
 pthread_t *PRODUCERS;
 pthread_t *CONSUMERS;
-int threadsReady = 0;
 
 void *producerFun(void *);
 
@@ -22,7 +22,7 @@ void *consumerFun(void *);
 
 void createThreads();
 
-void endThreads();
+//void endThreads();
 
 /*
  *  BUFFER
@@ -36,7 +36,7 @@ int inPos, outPos, count;
 
 int insertElement(char *);
 
-int removeElement(char **);
+int removeElement(char **, int *);
 
 /*
  * HELPERS
@@ -54,9 +54,12 @@ void openFiles(const char *);
 
 void terminate(char *);
 
-void longerSleep();
+//void longerSleep();
 
 void removeEndLine(char *);
+
+void sigintHandler(int sig);
+
 
 int main(int argc, char const *argv[]) {
 
@@ -83,23 +86,16 @@ int main(int argc, char const *argv[]) {
      * WORK
      */
 
-    if (runTime != 0) {
+    if (runTime != 0)
         sleep((unsigned int) runTime);
-        //longerSleep();
-    } else if (runTime == 0) {
-        while (!feof(in)) {
-            // DO NOTHING
-        }
-    }
-
-    printf("END OF PROGRAM\n");
-
+    else if (runTime == 0)
+        while (myEOF != 1)
+            sleep(1);
     /*
      * END
      */
 
-//    endThreads();
-
+    printf("THE END\n");
     return 0;
 }
 
@@ -120,11 +116,15 @@ void *producerFun(void *param) {
         removeEndLine(element);
         if (insertElement(element))
             terminate("Failed to insert element");
-        else if (outMode == VERBOSE) {
+        else if (outMode == VERBOSE)
             printf("PRODUCER %d | %s\n", arg, element);
-        }
 
         sleep((unsigned int) (rand() % 3 + 1));
+    }
+    if (read == -1) { // EOF reached - time to finish
+        myEOF = 1;
+//        pthread_cond_broadcast(&canConsume); // if any Consumer is stuck in removeElement, let him know
+        //TODO 1 : do i need to notify?
     }
     return NULL;
 }
@@ -132,20 +132,21 @@ void *producerFun(void *param) {
 void *consumerFun(void *param) {
     int arg = (int) param;
     printf("CONSUMER %d CREATED\n", arg);
-    char *element;
-    int indx;
+    char *element = NULL;
+    int indx = -1;
     while (1) {
-        if (removeElement(&element))
+        if (runTime == 0 && myEOF == 1) // PRODUCER reached EOF - time to finish
+            break;
+        if (removeElement(&element, &indx))
             terminate("Failed to remove element");
-        else if (outMode == VERBOSE) {
+        else if (outMode == VERBOSE)
             printf("CONSUMER %d | %s\n", arg, element);
-        }
         if (searchMode == LS_MODE && strlen(element) < searchValue)
-            printf("CONSUMER %d | FOUND %s AT %d", arg, element, indx);
+            printf("CONSUMER %d | FOUND %s AT %d\n", arg, element, indx);
         if (searchMode == EQ_MODE && strlen(element) == searchValue)
-            printf("CONSUMER %d | FOUND %s AT %d", arg, element, indx);
+            printf("CONSUMER %d | FOUND %s AT %d\n", arg, element, indx);
         if (searchMode == GT_MODE && strlen(element) > searchValue)
-            printf("CONSUMER %d | FOUND %s AT %d", arg, element, indx);
+            printf("CONSUMER %d | FOUND %s AT %d\n", arg, element, indx);
 
         sleep((unsigned int) (rand() % 3 + 1));
     }
@@ -154,30 +155,27 @@ void *consumerFun(void *param) {
 
 void createThreads() {
     for (int i = 0; i < producersNumber; i++) {
-        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *)(i)) != 0)
+        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *) (i)) != 0)
             terminate("Producer thread create failed");
     }
 
     for (int i = 0; i < consumersNumber; i++) {
-        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *)(i)) != 0)
+        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *) (i)) != 0)
             terminate("Consumer thread create failed");
     }
-
-    printf("Threads ready\n");
-    threadsReady = 1;
 }
 
-void endThreads() {
-    for (int i = 0; i < producersNumber; i++) {
-        if (pthread_join(PRODUCERS[i], NULL) != 0)
-            terminate("Thread join failed");
-    }
-
-    for (int i = 0; i < consumersNumber; i++) {
-        if (pthread_join(CONSUMERS[i], NULL) != 0)
-            terminate("Thread join failed");
-    }
-}
+//void endThreads() {
+//    for (int i = 0; i < producersNumber; i++) {
+//        if (pthread_join(PRODUCERS[i], NULL) != 0)
+//            terminate("Thread join failed");
+//    }
+//
+//    for (int i = 0; i < consumersNumber; i++) {
+//        if (pthread_join(CONSUMERS[i], NULL) != 0)
+//            terminate("Thread join failed");
+//    }
+//}
 
 /*
  * BUFFER
@@ -202,15 +200,16 @@ int insertElement(char *element) {
     return success;
 }
 
-int removeElement(char **element) {
+int removeElement(char **element, int *i) {
     int success;
     sem_wait(&full);
     pthread_mutex_lock(&mutex);
 
-    if (count != N) {
+    if (count != N && count != 0) { // count != 0 might be used after myEOF = 1 and consumer was stuck on canConsume
         *element = malloc(sizeof(char) * strlen(BOUNDED_BUFFER[outPos]));
         strcpy(*element, BOUNDED_BUFFER[outPos]);
         free(BOUNDED_BUFFER[outPos]);
+        *i = outPos;
         outPos = (outPos + 1) % N;
         count -= 1;
         success = 0;
@@ -234,7 +233,11 @@ void initialize() {
 
     sem_init(&empty, 0, (unsigned int) N); // All of buffer is empty
     sem_init(&full, 0, 0);
-    inPos = outPos = count = 0;
+
+    inPos = outPos = count = myEOF = 0;
+
+    if (signal(SIGINT, sigintHandler) == SIG_ERR)
+        terminate("Signal handler failed");
 
     if (atexit(cleanUp) != 0)
         terminate("Exit handler failed");
@@ -281,17 +284,24 @@ void terminate(char *msg) {
     exit(EXIT_FAILURE);
 }
 
-void longerSleep(){
-    clock_t startTime = clock();
-    clock_t stopTime = clock();
-    double elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
-    while (elapsed <= runTime) {
-        // DO NOTHING
-        stopTime = clock();
-        elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
-    }
+//void longerSleep() {
+//    clock_t startTime = clock();
+//    clock_t stopTime = clock();
+//    double elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
+//    while (elapsed <= runTime) {
+//        // DO NOTHING
+//        stopTime = clock();
+//        elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
+//    }
+//}
+
+void removeEndLine(char *string) {
+    string[strlen(string) - 1] = '\0';
 }
 
-void removeEndLine(char *string){
-    string[strlen(string)-1] = '\0';
+void sigintHandler(int sig) {
+    if (sig == SIGINT) {
+        printf("Received SIGINT - closing");
+        exit(EXIT_SUCCESS);
+    }
 }

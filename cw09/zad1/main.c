@@ -6,7 +6,7 @@ int searchValue;
 int searchMode;
 int outMode;
 int runTime;
-int myEOF = 0;
+int myEOF;
 
 /*
  * THREAD
@@ -15,7 +15,6 @@ int myEOF = 0;
 int producersNumber, consumersNumber;
 pthread_t *PRODUCERS;
 pthread_t *CONSUMERS;
-int threadsReady = 0;
 
 void *producerFun(void *);
 
@@ -23,7 +22,7 @@ void *consumerFun(void *);
 
 void createThreads();
 
-void endThreads();
+//void endThreads();
 
 /*
  *  BUFFER
@@ -56,7 +55,7 @@ void openFiles(const char *);
 
 void terminate(char *);
 
-void longerSleep();
+//void longerSleep();
 
 void removeEndLine(char *);
 
@@ -86,20 +85,16 @@ int main(int argc, char const *argv[]) {
      * WORK
      */
 
-    if (runTime != 0) {
+    if (runTime != 0)
         sleep((unsigned int) runTime);
-        //longerSleep();
-    } else if (runTime == 0) {
-        while (!myEOF) { //TODO : program doesnt exit if runTime == 0
+    else if (runTime == 0)
+        while (myEOF != 1)
             sleep(1);
-        }
-        printf("HA");
-    }
-
     /*
      * END
      */
 
+    printf("THE END\n");
     return 0;
 }
 
@@ -117,16 +112,17 @@ void *producerFun(void *param) {
 
 
     while ((read = getline(&element, &len, in)) != -1) {
-        if (read == 0) // TODO : no thread reaches this place  WHY ?
-            myEOF = 1;
         removeEndLine(element);
         if (insertElement(element))
             terminate("Failed to insert element");
-        else if (outMode == VERBOSE) {
+        else if (outMode == VERBOSE)
             printf("PRODUCER %d | %s\n", arg, element);
-        }
 
         sleep((unsigned int) (rand() % 3 + 1));
+    }
+    if (read == -1) { // EOF reached - time to finish
+        myEOF = 1;
+        pthread_cond_broadcast(&canConsume); // if any Consumer is stuck in removeElement, let him know
     }
     return NULL;
 }
@@ -137,11 +133,12 @@ void *consumerFun(void *param) {
     char *element;
     int indx;
     while (1) {
+        if (runTime == 0 && myEOF == 1) // PRODUCER reached EOF - time to finish
+            break;
         if (removeElement(&element, &indx))
             terminate("Failed to remove element");
-        else if (outMode == VERBOSE) {
+        else if (outMode == VERBOSE)
             printf("CONSUMER %d | %s\n", arg, element);
-        }
         if (searchMode == LS_MODE && strlen(element) < searchValue)
             printf("CONSUMER %d | FOUND %s AT %d\n", arg, element, indx);
         if (searchMode == EQ_MODE && strlen(element) == searchValue)
@@ -156,30 +153,27 @@ void *consumerFun(void *param) {
 
 void createThreads() {
     for (int i = 0; i < producersNumber; i++) {
-        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *)(i)) != 0)
+        if (pthread_create(&PRODUCERS[i], NULL, &producerFun, (void *) (i)) != 0)
             terminate("Producer thread create failed");
     }
 
     for (int i = 0; i < consumersNumber; i++) {
-        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *)(i)) != 0)
+        if (pthread_create(&CONSUMERS[i], NULL, &consumerFun, (void *) (i)) != 0)
             terminate("Consumer thread create failed");
     }
-
-    printf("Threads ready\n");
-    threadsReady = 1;
 }
 
-void endThreads() {
-    for (int i = 0; i < producersNumber; i++) {
-        if (pthread_join(PRODUCERS[i], NULL) != 0)
-            terminate("Thread join failed");
-    }
-
-    for (int i = 0; i < consumersNumber; i++) {
-        if (pthread_join(CONSUMERS[i], NULL) != 0)
-            terminate("Thread join failed");
-    }
-}
+//void endThreads() {
+//    for (int i = 0; i < producersNumber; i++) {
+//        if (pthread_join(PRODUCERS[i], NULL) != 0)
+//            terminate("Thread join failed");
+//    }
+//
+//    for (int i = 0; i < consumersNumber; i++) {
+//        if (pthread_join(CONSUMERS[i], NULL) != 0)
+//            terminate("Thread join failed");
+//    }
+//}
 
 /*
  * BUFFER
@@ -213,7 +207,7 @@ int removeElement(char **element, int *i) {
         pthread_cond_wait(&canConsume, &mutex);
     }
 
-    if (count != N) {
+    if (count != N && count != 0) { // count != 0 might be used after myEOF = 1 and consumer was stuck on canConsume
         *element = malloc(sizeof(char) * strlen(BOUNDED_BUFFER[outPos]));
         strcpy(*element, BOUNDED_BUFFER[outPos]);
         free(BOUNDED_BUFFER[outPos]);
@@ -238,7 +232,7 @@ void initialize() {
     CONSUMERS = malloc(sizeof(pthread_t) * consumersNumber);
     BOUNDED_BUFFER = malloc(sizeof(char *) * N);
     openFiles(path);
-    inPos = outPos = count = 0;
+    inPos = outPos = count = myEOF = 0;
 
     if (atexit(cleanUp) != 0)
         terminate("Exit handler failed");
@@ -257,10 +251,6 @@ void cleanUp() {
     pthread_cond_destroy(&canProduce);
     pthread_cond_destroy(&canConsume);
     pthread_mutex_destroy(&mutex);
-}
-
-void getConsumerResponse(char *element) {
-
 }
 
 int getSearchMode(const char *string) {
@@ -289,17 +279,17 @@ void terminate(char *msg) {
     exit(EXIT_FAILURE);
 }
 
-void longerSleep() {
-    clock_t startTime = clock();
-    clock_t stopTime = clock();
-    double elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
-    while (elapsed <= runTime) {
-        // DO NOTHING
-        stopTime = clock();
-        elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
-    }
-}
+//void longerSleep() {
+//    clock_t startTime = clock();
+//    clock_t stopTime = clock();
+//    double elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
+//    while (elapsed <= runTime) {
+//        // DO NOTHING
+//        stopTime = clock();
+//        elapsed = (double) (stopTime - startTime) * 1000.0 / CLOCKS_PER_SEC;
+//    }
+//}
 
-void removeEndLine(char *string){
-    string[strlen(string)-1] = '\0';
+void removeEndLine(char *string) {
+    string[strlen(string) - 1] = '\0';
 }
