@@ -22,7 +22,7 @@ void *consumerFun(void *);
 
 void createThreads();
 
-//void endThreads();
+void endThreads();
 
 /*
  *  BUFFER
@@ -96,6 +96,7 @@ int main(int argc, char const *argv[]) {
      */
 
     printf("THE END\n");
+    endThreads();
     return 0;
 }
 
@@ -165,17 +166,15 @@ void createThreads() {
     }
 }
 
-//void endThreads() {
-//    for (int i = 0; i < producersNumber; i++) {
-//        if (pthread_join(PRODUCERS[i], NULL) != 0)
-//            terminate("Thread join failed");
-//    }
-//
-//    for (int i = 0; i < consumersNumber; i++) {
-//        if (pthread_join(CONSUMERS[i], NULL) != 0)
-//            terminate("Thread join failed");
-//    }
-//}
+void endThreads() {
+    for (int i = 0; i < producersNumber; i++) {
+        pthread_cancel(PRODUCERS[i]);
+    }
+
+    for (int i = 0; i < consumersNumber; i++) {
+        pthread_cancel(CONSUMERS[i]);
+    }
+}
 
 /*
  * BUFFER
@@ -248,9 +247,6 @@ void cleanUp() {
     if (in != NULL && fclose(in) != 0)
         terminate("Closing IN failed");
 
-    for (int i = 0; i < N; ++i) {
-        free(BOUNDED_BUFFER[i]);
-    }
     free(BOUNDED_BUFFER);
 
     sem_destroy(&canProduce);

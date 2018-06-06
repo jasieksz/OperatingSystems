@@ -167,15 +167,16 @@ void createThreads() {
 }
 
 void endThreads() {
-    printf("END THREAADS\n");
    for (int i = 0; i < producersNumber; i++) {
-       if (pthread_join(PRODUCERS[i], NULL) != 0)
-           terminate("Thread join failed");
+       pthread_cancel(PRODUCERS[i]);
+//       if (pthread_join(PRODUCERS[i], NULL) != 0)
+//           terminate("Thread join failed");
    }
 
    for (int i = 0; i < consumersNumber; i++) {
-       if (pthread_join(CONSUMERS[i], NULL) != 0)
-           terminate("Thread join failed");
+       pthread_cancel(CONSUMERS[i]);
+//       if (pthread_join(CONSUMERS[i], NULL) != 0)
+//           terminate("Thread join failed");
    }
 }
 
@@ -251,9 +252,6 @@ void cleanUp() {
     if (in != NULL && fclose(in) != 0)
         terminate("Closing IN failed");
 
-    for (int i = 0; i < N; ++i) {
-        free(BOUNDED_BUFFER[i]);
-    }
     free(BOUNDED_BUFFER);
 
     pthread_cond_destroy(&canProduce);

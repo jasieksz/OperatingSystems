@@ -1,0 +1,15 @@
+a git
+b cd ..
+c cd etc/pacman.d/
+d ls
+e sudo pacman -Syyu
+f pacman -S git
+g echo
+h pwd
+i cp mirrorlist mirrorlist.backup
+j sudo cp mirrorlist mirrorlist.backupgit
+k pacman
+l sudo pacman -h
+m yaourt -Syy spotify
+n sudo pacman -S gnome-shell-extensions-mpris-indicator-button
+

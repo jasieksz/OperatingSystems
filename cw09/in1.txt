@@ -1,0 +1,77 @@
+a git
+b pacman
+c pacman -h
+d pacman -Syyu
+e sudo pacman -Syyu
+f pacman -S git
+g sudo pacman -S git
+h python --version
+i pip
+j pacman -h
+k pacman --help
+l sudo pacman -S python
+m pip
+n sudo pacman -Syu
+o sudo pacman-mirrors -f 0 && sudo pacman -Syy
+p pacman -Syu pacman-mirrorlist
+r sudo pacman -Syu pacman-mirrorlist
+s sudo pacman-mirrors -f 0 && sudo pacman -Syy
+t ls
+u cd ..
+w ls
+x cd ..
+y cd etc/pacman.d/
+z ls
+a echo
+b pwd
+c cp mirrorlist mirrorlist.backup
+d sudo cp mirrorlist mirrorlist.backup
+e ls
+f nano mirrorlist.backup
+g pip
+h sudo pacman -S python-pip
+i ls
+j cd ..
+k cd ..
+l cd home/
+m cd jasiek/
+n ls
+o jupyter notebook
+p sudo pacman -S jupyter-notebook
+r yaourt
+s nano /etc/pacman.conf
+t pacman -Syu yaourt
+u sudo pacman -Syu yaourt
+w yaourt
+x yaourt - h
+y yaourt -h
+z sudo pacman -S vlc
+a sudo pacman -S atom
+b sudo pacman -Syu
+c sudo pacman -S arc-gtk-theme
+d plank
+e arc
+f sudo pacman -S plank
+g sudo pacman -S spotify
+h pacman -S numix-icon-theme-circle
+i sudo pacman -S numix-icon-theme-circle
+j sudo pacman -R plank
+k pacman -S gimp
+l sudo pacman -S gimp
+m sudo pacman -S spotify-client
+n snap
+o yaourt -S spotify
+p adasf
+r yaourt -Syy spotify
+s sudo pacman -S gnome-shell-extensions-mpris-indicator-button
+t sudo yaourt -S gnome-shell-extensions-mpris-indicator-button
+u ls
+w cd Downloads
+x ls
+y mkdir instalki
+z cd instalki/
+a ls
+b git clone https://github.com/JasonLG1979/gnome-shell-extensions-mpris-indicatorbutton.git
+c cd gnome-shell-extensions-mpris-indicator-button/
+d cp -a mprisindicatorbutton@JasonLG1979.github.io ~/.local/share/gnome-shell/extensions/
+e gnome-shell-extension-prefs
